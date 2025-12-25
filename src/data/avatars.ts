@@ -1,0 +1,118 @@
+export const AVATARS = [
+  // Original animals
+  { id: 'shark', emoji: '🦈', name: 'Shark' },
+  { id: 'lion', emoji: '🦁', name: 'Lion' },
+  { id: 'eagle', emoji: '🦅', name: 'Eagle' },
+  { id: 'wolf', emoji: '🐺', name: 'Wolf' },
+  { id: 'bear', emoji: '🐻', name: 'Bear' },
+  { id: 'owl', emoji: '🦉', name: 'Owl' },
+  { id: 'cobra', emoji: '🐍', name: 'Snake' },
+  { id: 'fox', emoji: '🦊', name: 'Fox' },
+  { id: 'tiger', emoji: '🐯', name: 'Tiger' },
+  { id: 'raccoon', emoji: '🦝', name: 'Raccoon' },
+  { id: 'dragon', emoji: '🐲', name: 'Dragon' },
+  { id: 'gorilla', emoji: '🦍', name: 'Gorilla' },
+  { id: 'bison', emoji: '🦬', name: 'Bison' },
+  { id: 'lizard', emoji: '🦎', name: 'Lizard' },
+  { id: 'crocodile', emoji: '🐊', name: 'Crocodile' },
+  { id: 'scorpion', emoji: '🦂', name: 'Scorpion' },
+  // More mammals
+  { id: 'dog', emoji: '🐕', name: 'Dog' },
+  { id: 'cat', emoji: '🐈', name: 'Cat' },
+  { id: 'mouse', emoji: '🐁', name: 'Mouse' },
+  { id: 'hamster', emoji: '🐹', name: 'Hamster' },
+  { id: 'rabbit', emoji: '🐰', name: 'Rabbit' },
+  { id: 'bat', emoji: '🦇', name: 'Bat' },
+  { id: 'koala', emoji: '🐨', name: 'Koala' },
+  { id: 'panda', emoji: '🐼', name: 'Panda' },
+  { id: 'pig', emoji: '🐷', name: 'Pig' },
+  { id: 'boar', emoji: '🐗', name: 'Boar' },
+  { id: 'cow', emoji: '🐮', name: 'Cow' },
+  { id: 'horse', emoji: '🐴', name: 'Horse' },
+  { id: 'unicorn', emoji: '🦄', name: 'Unicorn' },
+  { id: 'zebra', emoji: '🦓', name: 'Zebra' },
+  { id: 'deer', emoji: '🦌', name: 'Deer' },
+  { id: 'giraffe', emoji: '🦒', name: 'Giraffe' },
+  { id: 'elephant', emoji: '🐘', name: 'Elephant' },
+  { id: 'mammoth', emoji: '🦣', name: 'Mammoth' },
+  { id: 'rhino', emoji: '🦏', name: 'Rhino' },
+  { id: 'hippo', emoji: '🦛', name: 'Hippo' },
+  { id: 'camel', emoji: '🐫', name: 'Camel' },
+  { id: 'llama', emoji: '🦙', name: 'Llama' },
+  { id: 'kangaroo', emoji: '🦘', name: 'Kangaroo' },
+  { id: 'monkey', emoji: '🐵', name: 'Monkey' },
+  { id: 'orangutan', emoji: '🦧', name: 'Orangutan' },
+  { id: 'chipmunk', emoji: '🐿️', name: 'Chipmunk' },
+  { id: 'beaver', emoji: '🦫', name: 'Beaver' },
+  { id: 'hedgehog', emoji: '🦔', name: 'Hedgehog' },
+  { id: 'sloth', emoji: '🦥', name: 'Sloth' },
+  { id: 'otter', emoji: '🦦', name: 'Otter' },
+  { id: 'skunk', emoji: '🦨', name: 'Skunk' },
+  { id: 'badger', emoji: '🦡', name: 'Badger' },
+  { id: 'leopard', emoji: '🐆', name: 'Leopard' },
+  { id: 'polarBear', emoji: '🐻‍❄️', name: 'Polar Bear' },
+  { id: 'moose', emoji: '🫎', name: 'Moose' },
+  { id: 'donkey', emoji: '🫏', name: 'Donkey' },
+  // Birds
+  { id: 'chicken', emoji: '🐔', name: 'Chicken' },
+  { id: 'rooster', emoji: '🐓', name: 'Rooster' },
+  { id: 'turkey', emoji: '🦃', name: 'Turkey' },
+  { id: 'peacock', emoji: '🦚', name: 'Peacock' },
+  { id: 'parrot', emoji: '🦜', name: 'Parrot' },
+  { id: 'swan', emoji: '🦢', name: 'Swan' },
+  { id: 'flamingo', emoji: '🦩', name: 'Flamingo' },
+  { id: 'dodo', emoji: '🦤', name: 'Dodo' },
+  { id: 'penguin', emoji: '🐧', name: 'Penguin' },
+  { id: 'duck', emoji: '🦆', name: 'Duck' },
+  { id: 'goose', emoji: '🪿', name: 'Goose' },
+  // Sea creatures
+  { id: 'whale', emoji: '🐳', name: 'Whale' },
+  { id: 'dolphin', emoji: '🐬', name: 'Dolphin' },
+  { id: 'seal', emoji: '🦭', name: 'Seal' },
+  { id: 'fish', emoji: '🐟', name: 'Fish' },
+  { id: 'tropicalFish', emoji: '🐠', name: 'Tropical Fish' },
+  { id: 'blowfish', emoji: '🐡', name: 'Blowfish' },
+  { id: 'octopus', emoji: '🐙', name: 'Octopus' },
+  { id: 'squid', emoji: '🦑', name: 'Squid' },
+  { id: 'shrimp', emoji: '🦐', name: 'Shrimp' },
+  { id: 'lobster', emoji: '🦞', name: 'Lobster' },
+  { id: 'crab', emoji: '🦀', name: 'Crab' },
+  { id: 'jellyfish', emoji: '🪼', name: 'Jellyfish' },
+  // Reptiles & amphibians
+  { id: 'turtle', emoji: '🐢', name: 'Turtle' },
+  { id: 'frog', emoji: '🐸', name: 'Frog' },
+  { id: 'tRex', emoji: '🦖', name: 'T-Rex' },
+  { id: 'sauropod', emoji: '🦕', name: 'Sauropod' },
+  // Bugs
+  { id: 'snail', emoji: '🐌', name: 'Snail' },
+  { id: 'butterfly', emoji: '🦋', name: 'Butterfly' },
+  { id: 'bee', emoji: '🐝', name: 'Bee' },
+  { id: 'beetle', emoji: '🪲', name: 'Beetle' },
+  { id: 'ladybug', emoji: '🐞', name: 'Ladybug' },
+  { id: 'ant', emoji: '🐜', name: 'Ant' },
+  { id: 'cricket', emoji: '🦗', name: 'Cricket' },
+  { id: 'spider', emoji: '🕷️', name: 'Spider' },
+  { id: 'mosquito', emoji: '🦟', name: 'Mosquito' },
+  { id: 'fly', emoji: '🪰', name: 'Fly' },
+  { id: 'worm', emoji: '🪱', name: 'Worm' },
+  // Fun extras
+  { id: 'alien', emoji: '👽', name: 'Alien' },
+  { id: 'robot', emoji: '🤖', name: 'Robot' },
+  { id: 'ghost', emoji: '👻', name: 'Ghost' },
+  { id: 'pumpkin', emoji: '🎃', name: 'Pumpkin' },
+  { id: 'snowman', emoji: '☃️', name: 'Snowman' },
+  { id: 'devil', emoji: '😈', name: 'Devil' },
+] as const;
+
+export type AvatarId = typeof AVATARS[number]['id'];
+
+export function getAvatarEmoji(id: string): string {
+  const avatar = AVATARS.find(a => a.id === id);
+  return avatar?.emoji ?? '❓';
+}
+
+export function getRandomAvatar(usedAvatars: string[]): typeof AVATARS[number] | null {
+  const available = AVATARS.filter(a => !usedAvatars.includes(a.id));
+  if (available.length === 0) return null;
+  return available[Math.floor(Math.random() * available.length)];
+}

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffd700"/>
+      <stop offset="100%" style="stop-color:#daa520"/>
+    </linearGradient>
+  </defs>
+  <!-- Trophy cup -->
+  <path d="M25 20 L75 20 L70 50 Q50 65 30 50 Z" fill="url(#gold)" stroke="#b8860b" stroke-width="2"/>
+  <!-- Left handle -->
+  <path d="M25 25 Q10 25 10 40 Q10 50 25 50" fill="none" stroke="url(#gold)" stroke-width="6" stroke-linecap="round"/>
+  <!-- Right handle -->
+  <path d="M75 25 Q90 25 90 40 Q90 50 75 50" fill="none" stroke="url(#gold)" stroke-width="6" stroke-linecap="round"/>
+  <!-- Stem -->
+  <rect x="42" y="55" width="16" height="15" fill="url(#gold)" stroke="#b8860b" stroke-width="1"/>
+  <!-- Base -->
+  <rect x="30" y="70" width="40" height="10" rx="2" fill="url(#gold)" stroke="#b8860b" stroke-width="1"/>
+  <!-- Star -->
+  <polygon points="50,28 53,38 63,38 55,44 58,54 50,48 42,54 45,44 37,38 47,38" fill="#e60012"/>
+</svg>
