@@ -811,6 +811,16 @@ function App() {
              style={{ fontFamily: "'Rajdhani', sans-serif" }}>
             May the best <span className="text-[#e60012] font-bold">triple threat</span> win!
           </p>
+          <a
+            href="https://github.com/sponsors/cwelty"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 mt-3 px-3 py-1 text-xs text-gray-500 hover:text-pink-400 transition-colors"
+            style={{ fontFamily: "'Rajdhani', sans-serif" }}
+          >
+            <span>💖</span>
+            <span>Support this project</span>
+          </a>
         </div>
       </footer>
     </div>
