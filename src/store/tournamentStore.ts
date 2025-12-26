@@ -57,7 +57,7 @@ function createEmptyPlayer(id: string, name: string, nickname: string, avatar: s
     isSmashChampion: false,
     isChessChampion: false,
     isPingPongChampion: false,
-    isBestBettor: false,
+    isBestGambler: false,
     playoffSeed: null,
   };
 }
@@ -106,7 +106,7 @@ interface TournamentStore extends TournamentState {
   recordFinalsResult: (winnerId: string, isDominant: boolean) => void;
   placePlayoffBet: (bettorId: string, matchKey: string, predictedWinnerId: string) => void;
   removePlayoffBet: (bettorId: string, matchKey: string) => void;
-  awardBestBettor: () => void;
+  awardBestGambler: () => void;
   completeTournament: () => void;
 
   // Playoff betting state
@@ -139,7 +139,7 @@ export const useTournamentStore = create<TournamentStore>()(
       smashChampionId: null,
       chessChampionId: null,
       pingPongChampionId: null,
-      bestBettorId: null,
+      bestGamblerId: null,
       tripleThreatchampionId: null,
 
       // Registration actions
@@ -1222,27 +1222,27 @@ export const useTournamentStore = create<TournamentStore>()(
         }));
       },
 
-      awardBestBettor: () => {
+      awardBestGambler: () => {
         set((state) => {
           const players = [...state.players];
 
-          // Find best bettor
+          // Find best gambler
           const sorted = [...players].sort((a, b) => {
             if (b.bettingProfit !== a.bettingProfit) return b.bettingProfit - a.bettingProfit;
             return b.betsPlaced - a.betsPlaced;
           });
 
-          const bestBettor = sorted[0];
-          if (bestBettor && bestBettor.bettingProfit > 0) {
-            const idx = players.findIndex((p) => p.id === bestBettor.id);
+          const bestGambler = sorted[0];
+          if (bestGambler && bestGambler.bettingProfit > 0) {
+            const idx = players.findIndex((p) => p.id === bestGambler.id);
             if (idx >= 0) {
               players[idx] = {
                 ...players[idx],
-                isBestBettor: true,
+                isBestGambler: true,
                 totalPoints: players[idx].totalPoints + 3,
               };
             }
-            return { players, bestBettorId: bestBettor.id };
+            return { players, bestGamblerId: bestGambler.id };
           }
 
           return { players };
@@ -1368,7 +1368,7 @@ export const useTournamentStore = create<TournamentStore>()(
           smashChampionId: null,
           chessChampionId: null,
           pingPongChampionId: null,
-          bestBettorId: null,
+          bestGamblerId: null,
           tripleThreatchampionId: null,
         });
       },

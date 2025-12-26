@@ -23,7 +23,7 @@ import { ThirdPlaceMatch } from './components/playoffs/ThirdPlaceMatch';
 
 // Awards
 import { ChampionReveal } from './components/awards/ChampionReveal';
-import { BestBettorReveal } from './components/awards/BestBettorReveal';
+import { BestGamblerReveal } from './components/awards/BestGamblerReveal';
 import { FinalResults } from './components/awards/FinalResults';
 
 // Drinking
@@ -53,8 +53,8 @@ function App() {
   const [showRules, setShowRules] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [showHeadToHead, setShowHeadToHead] = useState(false);
-  const [showBestBettorReveal, setShowBestBettorReveal] = useState(true);
-  const [bestBettorRevealed, setBestBettorRevealed] = useState(false);
+  const [showBestGamblerReveal, setShowBestGamblerReveal] = useState(true);
+  const [bestGamblerRevealed, setBestGamblerRevealed] = useState(false);
   const [showMatchmakingLog, setShowMatchmakingLog] = useState(false);
 
   // Champion reveal flow states
@@ -72,7 +72,7 @@ function App() {
     smashChampionId,
     chessChampionId,
     pingPongChampionId,
-    bestBettorId,
+    bestGamblerId,
     tripleThreatchampionId,
     registerPlayer,
     removePlayer,
@@ -98,7 +98,7 @@ function App() {
     skipThirdPlaceMatch,
     selectFinalsGame,
     recordFinalsResult,
-    awardBestBettor,
+    awardBestGambler,
     getPlayer,
     getCurrentRound,
     getOnDeckPlayers,
@@ -168,7 +168,7 @@ function App() {
   const smashChampion = smashChampionId ? getPlayer(smashChampionId) : undefined;
   const chessChampion = chessChampionId ? getPlayer(chessChampionId) : undefined;
   const pingPongChampion = pingPongChampionId ? getPlayer(pingPongChampionId) : undefined;
-  const bestBettor = bestBettorId ? getPlayer(bestBettorId) : undefined;
+  const bestGambler = bestGamblerId ? getPlayer(bestGamblerId) : undefined;
   const tripleThreatchampion = tripleThreatchampionId ? getPlayer(tripleThreatchampionId) : undefined;
 
   // Games are active when betting is closed but round is not complete
@@ -669,16 +669,16 @@ function App() {
         {/* Complete Phase */}
         {phase === 'complete' && (
           <>
-            {showBestBettorReveal && !bestBettorRevealed ? (
-              <BestBettorReveal
+            {showBestGamblerReveal && !bestGamblerRevealed ? (
+              <BestGamblerReveal
                 players={players}
-                bestBettorId={bestBettorId}
+                bestGamblerId={bestGamblerId}
                 onReveal={() => {
-                  awardBestBettor();
+                  awardBestGambler();
                 }}
                 onContinue={() => {
-                  setBestBettorRevealed(true);
-                  setShowBestBettorReveal(false);
+                  setBestGamblerRevealed(true);
+                  setShowBestGamblerReveal(false);
                 }}
               />
             ) : (
@@ -688,7 +688,7 @@ function App() {
                 smashChampion={smashChampion}
                 chessChampion={chessChampion}
                 pingPongChampion={pingPongChampion}
-                bestBettor={bestBettor}
+                bestGambler={bestGambler}
                 getSortedStandings={getSortedStandings}
                 getGameStandings={getGameStandings}
                 onReset={resetTournament}
@@ -785,8 +785,8 @@ function App() {
                 resetTournament();
                 setShowResetConfirm(false);
                 setCurrentSyncMatch(0);
-                setShowBestBettorReveal(true);
-                setBestBettorRevealed(false);
+                setShowBestGamblerReveal(true);
+                setBestGamblerRevealed(false);
               }}
               className="flex-1"
             >

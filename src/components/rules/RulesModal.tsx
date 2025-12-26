@@ -146,9 +146,9 @@ export function RulesModal({ isOpen, onClose }: RulesModalProps) {
               </div>
 
               <div className="bg-gray-800 rounded-lg p-4">
-                <h4 className="font-semibold text-white mb-2">Best Bettor Award</h4>
+                <h4 className="font-semibold text-white mb-2">Best Gambler Award</h4>
                 <p className="text-sm">
-                  At tournament end, the player with the highest betting profit receives
+                  At tournament end, the player with the highest gambling profit receives
                   a <span className="text-yellow-400">+3 point bonus</span> (must have positive profit).
                 </p>
               </div>
@@ -198,7 +198,7 @@ export function RulesModal({ isOpen, onClose }: RulesModalProps) {
                 <h4 className="font-semibold text-white mb-2">Bonus Points</h4>
                 <ul className="space-y-1 text-sm">
                   <li><span className="text-purple-400">Game Champion:</span> +5 points (each game)</li>
-                  <li><span className="text-yellow-400">Best Bettor:</span> +3 points</li>
+                  <li><span className="text-yellow-400">Best Gambler:</span> +3 points</li>
                   <li><span className="text-green-400">Correct Bet:</span> +1 point</li>
                   <li><span className="text-red-400">Wrong Bet:</span> -1 point</li>
                 </ul>

@@ -49,7 +49,7 @@ export interface Player {
   isSmashChampion: boolean;
   isChessChampion: boolean;
   isPingPongChampion: boolean;
-  isBestBettor: boolean;
+  isBestGambler: boolean;
   playoffSeed: number | null;
 }
 
@@ -129,7 +129,7 @@ export interface TournamentState {
   smashChampionId: string | null;
   chessChampionId: string | null;
   pingPongChampionId: string | null;
-  bestBettorId: string | null;
+  bestGamblerId: string | null;
   tripleThreatchampionId: string | null;
 }
 

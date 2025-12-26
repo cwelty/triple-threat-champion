@@ -11,7 +11,7 @@ interface FinalResultsProps {
   smashChampion: Player | undefined;
   chessChampion: Player | undefined;
   pingPongChampion: Player | undefined;
-  bestBettor: Player | undefined;
+  bestGambler: Player | undefined;
   getSortedStandings: () => Player[];
   getGameStandings: (gameType: 'smash' | 'chess' | 'pingPong') => Player[];
   onReset: () => void;
@@ -23,7 +23,7 @@ export function FinalResults({
   smashChampion,
   chessChampion,
   pingPongChampion,
-  bestBettor,
+  bestGambler,
   getSortedStandings,
   getGameStandings,
   onReset,
@@ -118,15 +118,15 @@ export function FinalResults({
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(234,179,8,0.2),transparent_70%)]" />
           <div className="relative z-10">
             <div className="text-3xl mb-2 drop-shadow-[0_0_10px_rgba(234,179,8,0.5)]">🎰</div>
-            <div className="text-xs font-bold text-yellow-400 mb-3 uppercase tracking-wider">Best Bettor</div>
-            {bestBettor && (
+            <div className="text-xs font-bold text-yellow-400 mb-3 uppercase tracking-wider">Best Gambler</div>
+            {bestGambler && (
               <>
-                <div className="text-5xl mb-2 drop-shadow-lg">{getAvatarEmoji(bestBettor.avatar)}</div>
+                <div className="text-5xl mb-2 drop-shadow-lg">{getAvatarEmoji(bestGambler.avatar)}</div>
                 <div className="font-bold text-white text-lg" style={{ fontFamily: "'Russo One', sans-serif" }}>
-                  {bestBettor.nickname}
+                  {bestGambler.nickname}
                 </div>
                 <div className="mt-1 inline-block px-2 py-0.5 bg-green-500/20 border border-green-500/50 rounded text-sm font-bold text-green-400">
-                  +{bestBettor.bettingProfit} profit
+                  +{bestGambler.bettingProfit} profit
                 </div>
               </>
             )}
