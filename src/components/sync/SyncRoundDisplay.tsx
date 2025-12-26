@@ -115,7 +115,9 @@ export function SyncRoundDisplay({
     onDeclineVolunteer(index);
   };
 
-  const allVolunteersAccepted = acceptedMatches.size === round.matches.length;
+  // Matches with both underserved players are auto-accepted (no volunteer needed)
+  const matchesNeedingAcceptance = round.matches.filter(m => !m.secondUnderservedPlayerId && m.winnerId === null);
+  const allVolunteersAccepted = acceptedMatches.size >= matchesNeedingAcceptance.length;
 
   return (
     <div className="space-y-6">
@@ -173,8 +175,9 @@ export function SyncRoundDisplay({
               const originalIndex = round.matches.findIndex((m) => m.id === match.id);
               const isAccepted = acceptedMatches.has(originalIndex);
               const isComplete = match.winnerId !== null;
-              const underservedPlayer = getPlayer(match.player1Id);
-              const volunteerPlayer = getPlayer(match.player2Id);
+              const player1 = getPlayer(match.player1Id);
+              const player2 = getPlayer(match.player2Id);
+              const bothUnderserved = !!match.secondUnderservedPlayerId;
 
               if (isComplete) return null;
 
@@ -198,38 +201,47 @@ export function SyncRoundDisplay({
                   <div className="p-4 space-y-4">
                     {/* Players row */}
                     <div className="flex items-center justify-center gap-4">
-                      <div className="text-center">
+                      <div className="text-center flex-1">
                         <div className="text-3xl mb-1">
-                          {underservedPlayer ? getAvatarEmoji(underservedPlayer.avatar) : '?'}
+                          {player1 ? getAvatarEmoji(player1.avatar) : '?'}
                         </div>
-                        <div className="text-xs text-white font-medium truncate max-w-[80px]">
-                          {underservedPlayer?.nickname}
+                        <div className="text-[10px] text-white font-medium leading-tight">
+                          {player1?.nickname}
                         </div>
                         <div className="text-[10px] text-[#e60012] font-semibold">Needs Match</div>
                       </div>
 
                       <div className="text-gray-500 font-bold text-sm">VS</div>
 
-                      <div className="text-center">
+                      <div className="text-center flex-1">
                         <div className="text-3xl mb-1">
-                          {volunteerPlayer ? getAvatarEmoji(volunteerPlayer.avatar) : '?'}
+                          {player2 ? getAvatarEmoji(player2.avatar) : '?'}
                         </div>
-                        <div className="text-xs text-white font-medium truncate max-w-[80px]">
-                          {volunteerPlayer?.nickname}
+                        <div className="text-[10px] text-white font-medium leading-tight">
+                          {player2?.nickname}
                         </div>
-                        <div className="text-[10px] text-blue-400 font-semibold">Volunteer</div>
+                        <div className={`text-[10px] font-semibold ${bothUnderserved ? 'text-[#e60012]' : 'text-blue-400'}`}>
+                          {bothUnderserved ? 'Needs Match' : 'Volunteer'}
+                        </div>
                       </div>
                     </div>
 
                     {/* Status badges */}
-                    {match.isVolunteerForced && (
-                      <div className="bg-purple-900/30 border border-purple-500/50 rounded px-2 py-1 text-center">
-                        <p className="text-purple-400 text-[10px] font-medium">
-                          🎲 Randomly Assigned
+                    {bothUnderserved && (
+                      <div className="bg-green-900/30 border border-green-500/50 rounded px-2 py-1 text-center">
+                        <p className="text-green-400 text-[10px] font-medium">
+                          Both players need this match
                         </p>
                       </div>
                     )}
-                    {match.isVolunteerExhausted && !match.isVolunteerForced && (
+                    {match.isVolunteerForced && !bothUnderserved && (
+                      <div className="bg-purple-900/30 border border-purple-500/50 rounded px-2 py-1 text-center">
+                        <p className="text-purple-400 text-[10px] font-medium">
+                          Randomly Assigned
+                        </p>
+                      </div>
+                    )}
+                    {match.isVolunteerExhausted && !match.isVolunteerForced && !bothUnderserved && (
                       <div className="bg-red-900/30 border border-red-600/50 rounded px-2 py-1 text-center">
                         <p className="text-red-400 text-[10px] font-medium">
                           Rematch Required
@@ -238,7 +250,11 @@ export function SyncRoundDisplay({
                     )}
 
                     {/* Action area */}
-                    {isAccepted ? (
+                    {bothUnderserved ? (
+                      <div className="text-center text-green-400 text-xs font-semibold">
+                        ✓ Auto-matched
+                      </div>
+                    ) : isAccepted ? (
                       <div className="text-center text-green-400 text-xs font-semibold">
                         ✓ Volunteer Accepted
                       </div>
@@ -294,50 +310,67 @@ export function SyncRoundDisplay({
           />
 
           {/* Matchups Display */}
-          <div className="flex flex-wrap justify-center gap-4">
+          <div className="grid gap-4 md:grid-cols-3 max-w-4xl mx-auto">
             {sortedMatches.filter(m => m.winnerId === null).map((match) => {
-              const underservedPlayer = getPlayer(match.player1Id);
-              const volunteerPlayer = getPlayer(match.player2Id);
+              const player1 = getPlayer(match.player1Id);
+              const player2 = getPlayer(match.player2Id);
+              const bothUnderserved = !!match.secondUnderservedPlayerId;
+              const colors = match.gameType === 'smash'
+                ? { bg: 'from-red-900/50 to-red-950/50', text: 'text-red-400' }
+                : match.gameType === 'chess'
+                  ? { bg: 'from-purple-900/50 to-purple-950/50', text: 'text-purple-400' }
+                  : { bg: 'from-green-900/50 to-green-950/50', text: 'text-green-400' };
 
               return (
                 <div
                   key={match.id}
-                  className="bg-gray-800 rounded-xl overflow-hidden w-72"
+                  className="smash-card rounded-lg overflow-hidden"
                 >
-                  <div className={`px-4 py-2 text-center ${
-                    match.gameType === 'smash' ? 'bg-red-900/50' :
-                    match.gameType === 'chess' ? 'bg-purple-900/50' : 'bg-green-900/50'
-                  }`}>
-                    <span className="text-xl mr-2">{GAME_ICONS[match.gameType]}</span>
-                    <span className="font-bold text-white uppercase tracking-wide text-sm"
-                          style={{ fontFamily: "'Russo One', sans-serif" }}>
-                      {GAME_NAMES[match.gameType]}
-                    </span>
-                  </div>
-                  <div className="p-4">
-                    <div className="flex items-center justify-center gap-4">
-                      <div className="text-center">
-                        <div className="text-3xl mb-1">
-                          {underservedPlayer ? getAvatarEmoji(underservedPlayer.avatar) : '?'}
-                        </div>
-                        <div className="text-xs text-white font-medium truncate max-w-[80px]">
-                          {underservedPlayer?.nickname}
-                        </div>
-                        <div className="text-[10px] text-[#e60012] font-semibold">Needs Match</div>
-                      </div>
-                      <div className="text-gray-500 font-bold text-sm">VS</div>
-                      <div className="text-center">
-                        <div className="text-3xl mb-1">
-                          {volunteerPlayer ? getAvatarEmoji(volunteerPlayer.avatar) : '?'}
-                        </div>
-                        <div className="text-xs text-white font-medium truncate max-w-[80px]">
-                          {volunteerPlayer?.nickname}
-                        </div>
-                        <div className="text-[10px] text-blue-400 font-semibold">Volunteer</div>
-                      </div>
+                  {/* Game Type Header */}
+                  <div className={`bg-gradient-to-r ${colors.bg} px-4 py-2 border-b border-[#333]`}>
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="text-2xl">{GAME_ICONS[match.gameType]}</span>
+                      <span className={`font-bold uppercase tracking-wider ${colors.text}`}
+                            style={{ fontFamily: "'Russo One', sans-serif" }}>
+                        {GAME_NAMES[match.gameType]}
+                      </span>
                     </div>
-                    <div className="mt-2 text-center text-green-400 text-xs font-semibold">
-                      ✓ Ready to Play
+                  </div>
+
+                  <div className="p-6">
+                    <div className="flex items-center justify-center gap-3">
+                      {/* Player 1 */}
+                      <div className="flex flex-col items-center">
+                        <div className="relative w-28 text-center p-3 rounded-lg bg-[#1a1a1a]">
+                          <div className="text-5xl mb-2">
+                            {player1 ? getAvatarEmoji(player1.avatar) : '?'}
+                          </div>
+                          <div className="font-bold text-white tracking-wide text-[11px] leading-tight"
+                               style={{ fontFamily: "'Rajdhani', sans-serif" }}>
+                            {player1?.nickname ?? 'Unknown'}
+                          </div>
+                          <div className="mt-1 text-xs text-[#e60012] font-bold uppercase">Needs Match</div>
+                        </div>
+                      </div>
+
+                      {/* VS */}
+                      <div className="smash-vs text-3xl">VS</div>
+
+                      {/* Player 2 */}
+                      <div className="flex flex-col items-center">
+                        <div className="relative w-28 text-center p-3 rounded-lg bg-[#1a1a1a]">
+                          <div className="text-5xl mb-2">
+                            {player2 ? getAvatarEmoji(player2.avatar) : '?'}
+                          </div>
+                          <div className="font-bold text-white tracking-wide text-[11px] leading-tight"
+                               style={{ fontFamily: "'Rajdhani', sans-serif" }}>
+                            {player2?.nickname ?? 'Unknown'}
+                          </div>
+                          <div className={`mt-1 text-xs font-bold uppercase ${bothUnderserved ? 'text-[#e60012]' : 'text-blue-400'}`}>
+                            {bothUnderserved ? 'Needs Match' : 'Volunteer'}
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -401,57 +434,80 @@ export function SyncRoundDisplay({
             </div>
           )}
 
-          {/* Match Cards for Result Entry - with volunteer labels */}
-          <div className="flex flex-wrap justify-center gap-4">
+          {/* Match Cards for Result Entry */}
+          <div className="grid gap-4 md:grid-cols-3 max-w-4xl mx-auto">
             {sortedMatches.filter(m => m.winnerId === null).map((match) => {
-              const underservedPlayer = getPlayer(match.player1Id);
-              const volunteerPlayer = getPlayer(match.player2Id);
+              const player1 = getPlayer(match.player1Id);
+              const player2 = getPlayer(match.player2Id);
+              const bothUnderserved = !!match.secondUnderservedPlayerId;
+              const colors = match.gameType === 'smash'
+                ? { bg: 'from-red-900/50 to-red-950/50', text: 'text-red-400' }
+                : match.gameType === 'chess'
+                  ? { bg: 'from-purple-900/50 to-purple-950/50', text: 'text-purple-400' }
+                  : { bg: 'from-green-900/50 to-green-950/50', text: 'text-green-400' };
 
               return (
                 <div
                   key={match.id}
-                  className="bg-gray-800 rounded-xl overflow-hidden w-72"
+                  className="smash-card rounded-lg overflow-hidden"
                 >
-                  <div className={`px-4 py-2 text-center ${
-                    match.gameType === 'smash' ? 'bg-red-900/50' :
-                    match.gameType === 'chess' ? 'bg-purple-900/50' : 'bg-green-900/50'
-                  }`}>
-                    <span className="text-xl mr-2">{GAME_ICONS[match.gameType]}</span>
-                    <span className="font-bold text-white uppercase tracking-wide text-sm"
-                          style={{ fontFamily: "'Russo One', sans-serif" }}>
-                      {GAME_NAMES[match.gameType]}
-                    </span>
+                  {/* Game Type Header */}
+                  <div className={`bg-gradient-to-r ${colors.bg} px-4 py-2 border-b border-[#333]`}>
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="text-2xl">{GAME_ICONS[match.gameType]}</span>
+                      <span className={`font-bold uppercase tracking-wider ${colors.text}`}
+                            style={{ fontFamily: "'Russo One', sans-serif" }}>
+                        {GAME_NAMES[match.gameType]}
+                      </span>
+                    </div>
                   </div>
-                  <div className="p-4 space-y-4">
-                    <div className="flex items-center justify-center gap-4">
-                      <div className="text-center">
-                        <div className="text-3xl mb-1">
-                          {underservedPlayer ? getAvatarEmoji(underservedPlayer.avatar) : '?'}
+
+                  <div className="p-6">
+                    <div className="flex items-center justify-center gap-3">
+                      {/* Player 1 */}
+                      <div className="flex flex-col items-center">
+                        <div className="relative w-28 text-center p-3 rounded-lg bg-[#1a1a1a]">
+                          <div className="text-5xl mb-2">
+                            {player1 ? getAvatarEmoji(player1.avatar) : '?'}
+                          </div>
+                          <div className="font-bold text-white tracking-wide text-[11px] leading-tight"
+                               style={{ fontFamily: "'Rajdhani', sans-serif" }}>
+                            {player1?.nickname ?? 'Unknown'}
+                          </div>
+                          <div className="mt-1 text-xs text-[#e60012] font-bold uppercase">Needs Match</div>
                         </div>
-                        <div className="text-xs text-white font-medium truncate max-w-[80px]">
-                          {underservedPlayer?.nickname}
-                        </div>
-                        <div className="text-[10px] text-[#e60012] font-semibold">Needs Match</div>
                       </div>
-                      <div className="text-gray-500 font-bold text-sm">VS</div>
-                      <div className="text-center">
-                        <div className="text-3xl mb-1">
-                          {volunteerPlayer ? getAvatarEmoji(volunteerPlayer.avatar) : '?'}
+
+                      {/* VS */}
+                      <div className="smash-vs text-3xl">VS</div>
+
+                      {/* Player 2 */}
+                      <div className="flex flex-col items-center">
+                        <div className="relative w-28 text-center p-3 rounded-lg bg-[#1a1a1a]">
+                          <div className="text-5xl mb-2">
+                            {player2 ? getAvatarEmoji(player2.avatar) : '?'}
+                          </div>
+                          <div className="font-bold text-white tracking-wide text-[11px] leading-tight"
+                               style={{ fontFamily: "'Rajdhani', sans-serif" }}>
+                            {player2?.nickname ?? 'Unknown'}
+                          </div>
+                          <div className={`mt-1 text-xs font-bold uppercase ${bothUnderserved ? 'text-[#e60012]' : 'text-blue-400'}`}>
+                            {bothUnderserved ? 'Needs Match' : 'Volunteer'}
+                          </div>
                         </div>
-                        <div className="text-xs text-white font-medium truncate max-w-[80px]">
-                          {volunteerPlayer?.nickname}
-                        </div>
-                        <div className="text-[10px] text-blue-400 font-semibold">Volunteer</div>
                       </div>
                     </div>
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      className="w-full"
-                      onClick={() => setResultModalMatch(match)}
-                    >
-                      Enter Result
-                    </Button>
+
+                    {/* Enter Result button */}
+                    <div className="mt-6">
+                      <Button
+                        onClick={() => setResultModalMatch(match)}
+                        variant="primary"
+                        className="w-full"
+                      >
+                        Enter Result
+                      </Button>
+                    </div>
                   </div>
                 </div>
               );

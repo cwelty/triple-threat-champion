@@ -65,6 +65,7 @@ export interface Match {
   isPlayoff: boolean;
   playoffRound: 'semifinal' | 'thirdPlace' | 'final' | null;
   underservedPlayerId: string | null;
+  secondUnderservedPlayerId?: string | null; // When two underserved players are matched together
   volunteerId: string | null;
   // Sync round volunteer exhaustion tracking
   isVolunteerExhausted?: boolean; // True if all eligible players have already played underserved in this game

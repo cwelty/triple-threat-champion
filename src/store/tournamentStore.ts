@@ -186,9 +186,18 @@ export const useTournamentStore = create<TournamentStore>()(
 
       // Round actions
       startRound: () => {
-        const { players, rounds, currentRound, matchmakingLogs } = get();
+        const { players, rounds, currentRound, totalRounds, matchmakingLogs } = get();
         const allMatches = rounds.flatMap((r) => r.matches);
         const { matches, log } = generateSwissPairings(players, allMatches, currentRound + 1);
+
+        // If no matches could be generated, skip to sync phase
+        if (matches.length === 0) {
+          set({
+            phase: 'sync',
+            matchmakingLogs: [...matchmakingLogs, log],
+          });
+          return;
+        }
 
         const round: Round = {
           roundNumber: currentRound + 1,
@@ -542,25 +551,97 @@ export const useTournamentStore = create<TournamentStore>()(
         const underserved = findUnderservedPlayers(players);
         const syncRoundNumber = totalRounds + 1;
 
-        // Create sync round matches - track assigned volunteers to avoid duplicates
+        // Create sync round matches
         const syncMatches: Match[] = [];
-        const assignedVolunteerIds: string[] = [];
+        const assignedPlayerIds: string[] = []; // Track players already assigned to a match
+
+        // Helper to get game-specific opponents
+        const getGameOpponents = (player: Player, gameType: GameType): string[] => {
+          switch (gameType) {
+            case 'smash': return player.smashOpponents;
+            case 'chess': return player.chessOpponents;
+            case 'pingPong': return player.pingPongOpponents;
+          }
+        };
+
+        // Group underserved players by their most-needed game type
+        const byGameType: Record<GameType, typeof underserved> = {
+          smash: [],
+          chess: [],
+          pingPong: [],
+        };
 
         for (const shortage of underserved) {
           const gameType = shortage.smashNeeded > 0 ? 'smash' :
                           shortage.chessNeeded > 0 ? 'chess' : 'pingPong';
+          byGameType[gameType].push(shortage);
+        }
 
-          // Exclude volunteers already assigned to other sync matches
+        // First pass: pair underserved players with each other when possible
+        for (const gameType of ['smash', 'chess', 'pingPong'] as GameType[]) {
+          const needingGame = byGameType[gameType].filter(
+            s => !assignedPlayerIds.includes(s.playerId)
+          );
+
+          // Try to pair underserved players together
+          while (needingGame.length >= 2) {
+            const player1Shortage = needingGame.shift()!;
+            const player1 = players.find(p => p.id === player1Shortage.playerId)!;
+            const player1Opponents = getGameOpponents(player1, gameType);
+
+            // Find another underserved player who hasn't faced player1 in this game
+            const pairIndex = needingGame.findIndex(s => {
+              return !player1Opponents.includes(s.playerId);
+            });
+
+            if (pairIndex >= 0) {
+              const player2Shortage = needingGame.splice(pairIndex, 1)[0];
+
+              assignedPlayerIds.push(player1Shortage.playerId, player2Shortage.playerId);
+
+              // Both players are underserved - create a match where both benefit
+              syncMatches.push({
+                id: crypto.randomUUID(),
+                roundNumber: syncRoundNumber,
+                gameType,
+                player1Id: player1Shortage.playerId,
+                player2Id: player2Shortage.playerId,
+                winnerId: null,
+                isDominant: false,
+                isSyncRound: true,
+                isPlayoff: false,
+                playoffRound: null,
+                underservedPlayerId: player1Shortage.playerId, // Both are underserved
+                secondUnderservedPlayerId: player2Shortage.playerId, // Track second underserved
+                volunteerId: null, // No volunteer needed
+                isVolunteerExhausted: false,
+                isVolunteerForced: false,
+              });
+            } else {
+              // Couldn't find a valid pair, put player1 back for volunteer matching
+              needingGame.unshift(player1Shortage);
+              break;
+            }
+          }
+        }
+
+        // Second pass: remaining underserved players get volunteers
+        for (const shortage of underserved) {
+          if (assignedPlayerIds.includes(shortage.playerId)) continue;
+
+          const gameType = shortage.smashNeeded > 0 ? 'smash' :
+                          shortage.chessNeeded > 0 ? 'chess' : 'pingPong';
+
+          // Exclude players already assigned to sync matches
           const volunteerResult = findVolunteer(
             players,
             shortage.playerId,
             gameType,
-            assignedVolunteerIds
+            assignedPlayerIds
           );
 
-          // Track this volunteer so they can't be assigned again
           if (volunteerResult.volunteer) {
-            assignedVolunteerIds.push(volunteerResult.volunteer.id);
+            assignedPlayerIds.push(volunteerResult.volunteer.id);
           }
 
           syncMatches.push({
@@ -579,6 +660,8 @@ export const useTournamentStore = create<TournamentStore>()(
             isVolunteerExhausted: volunteerResult.isExhausted,
             isVolunteerForced: volunteerResult.isForced,
           });
+
+          assignedPlayerIds.push(shortage.playerId);
         }
 
         const round: Round = {
@@ -671,6 +754,7 @@ export const useTournamentStore = create<TournamentStore>()(
 
           const match = rounds[syncRoundIndex].matches[matchIndex];
           const underservedId = match.underservedPlayerId;
+          const secondUnderservedId = match.secondUnderservedPlayerId;
           const loserId = match.player1Id === winnerId ? match.player2Id : match.player1Id;
 
           // Update match
@@ -680,42 +764,53 @@ export const useTournamentStore = create<TournamentStore>()(
             isDominant,
           };
 
-          // Only underserved player's stats are affected
+          // Helper function to update an underserved player's stats
+          const updateUnderservedPlayer = (playerId: string, opponentId: string) => {
+            const playerIndex = players.findIndex((p) => p.id === playerId);
+            if (playerIndex < 0) return;
+
+            const player = players[playerIndex];
+            const didWin = playerId === winnerId;
+            const points = didWin ? (isDominant ? 5 : 3) : 0;
+
+            const gameRecord = match.gameType === 'smash' ? 'smashRecord' :
+                              match.gameType === 'chess' ? 'chessRecord' : 'pingPongRecord';
+            const gameMatches = match.gameType === 'smash' ? 'smashMatchesPlayed' :
+                               match.gameType === 'chess' ? 'chessMatchesPlayed' : 'pingPongMatchesPlayed';
+            const gameOpponents = match.gameType === 'smash' ? 'smashOpponents' :
+                                 match.gameType === 'chess' ? 'chessOpponents' : 'pingPongOpponents';
+            const gameDominantWins = match.gameType === 'smash' ? 'smashDominantWins' :
+                                    match.gameType === 'chess' ? 'chessDominantWins' : 'pingPongDominantWins';
+
+            players[playerIndex] = {
+              ...player,
+              totalPoints: player.totalPoints + points,
+              matchRecord: {
+                wins: player.matchRecord.wins + (didWin ? 1 : 0),
+                losses: player.matchRecord.losses + (didWin ? 0 : 1),
+              },
+              [gameRecord]: {
+                wins: player[gameRecord].wins + (didWin ? 1 : 0),
+                losses: player[gameRecord].losses + (didWin ? 0 : 1),
+              },
+              dominantWins: player.dominantWins + (didWin && isDominant ? 1 : 0),
+              [gameDominantWins]: player[gameDominantWins] + (didWin && isDominant ? 1 : 0),
+              matchesPlayed: player.matchesPlayed + 1,
+              [gameMatches]: player[gameMatches] + 1,
+              [gameOpponents]: [...player[gameOpponents], opponentId],
+            };
+          };
+
+          // Update stats for underserved player(s)
           if (underservedId) {
-            const underservedIndex = players.findIndex((p) => p.id === underservedId);
-            if (underservedIndex >= 0) {
-              const underserved = players[underservedIndex];
-              const didWin = underservedId === winnerId;
-              const points = didWin ? (isDominant ? 5 : 3) : 0;
-              const opponentId = underservedId === match.player1Id ? match.player2Id : match.player1Id;
+            const opponentId = underservedId === match.player1Id ? match.player2Id : match.player1Id;
+            updateUnderservedPlayer(underservedId, opponentId);
+          }
 
-              const gameRecord = match.gameType === 'smash' ? 'smashRecord' :
-                                match.gameType === 'chess' ? 'chessRecord' : 'pingPongRecord';
-              const gameMatches = match.gameType === 'smash' ? 'smashMatchesPlayed' :
-                                 match.gameType === 'chess' ? 'chessMatchesPlayed' : 'pingPongMatchesPlayed';
-              const gameOpponents = match.gameType === 'smash' ? 'smashOpponents' :
-                                   match.gameType === 'chess' ? 'chessOpponents' : 'pingPongOpponents';
-              const gameDominantWins = match.gameType === 'smash' ? 'smashDominantWins' :
-                                      match.gameType === 'chess' ? 'chessDominantWins' : 'pingPongDominantWins';
-
-              players[underservedIndex] = {
-                ...underserved,
-                totalPoints: underserved.totalPoints + points,
-                matchRecord: {
-                  wins: underserved.matchRecord.wins + (didWin ? 1 : 0),
-                  losses: underserved.matchRecord.losses + (didWin ? 0 : 1),
-                },
-                [gameRecord]: {
-                  wins: underserved[gameRecord].wins + (didWin ? 1 : 0),
-                  losses: underserved[gameRecord].losses + (didWin ? 0 : 1),
-                },
-                dominantWins: underserved.dominantWins + (didWin && isDominant ? 1 : 0),
-                [gameDominantWins]: underserved[gameDominantWins] + (didWin && isDominant ? 1 : 0),
-                matchesPlayed: underserved.matchesPlayed + 1,
-                [gameMatches]: underserved[gameMatches] + 1,
-                [gameOpponents]: [...underserved[gameOpponents], opponentId],
-              };
-            }
+          // If there's a second underserved player, update their stats too
+          if (secondUnderservedId) {
+            const opponentId = secondUnderservedId === match.player1Id ? match.player2Id : match.player1Id;
+            updateUnderservedPlayer(secondUnderservedId, opponentId);
           }
 
           // Process bets (only affect underserved player's outcome)
@@ -1090,6 +1185,18 @@ export const useTournamentStore = create<TournamentStore>()(
 
       placePlayoffBet: (bettorId, matchKey, predictedWinnerId) => {
         set((state) => {
+          // Semifinal players cannot bet on any playoff match
+          const semifinalPlayerIds = new Set([
+            state.playoffBracket.semifinal1.player1Id,
+            state.playoffBracket.semifinal1.player2Id,
+            state.playoffBracket.semifinal2.player1Id,
+            state.playoffBracket.semifinal2.player2Id,
+          ].filter(Boolean));
+
+          if (semifinalPlayerIds.has(bettorId)) {
+            return {}; // Reject bet from semifinal players
+          }
+
           // Remove any existing bet from this bettor for this match
           const filteredBets = state.playoffBets.filter(
             (b) => !(b.bettorId === bettorId && b.matchId === matchKey)
@@ -1168,7 +1275,64 @@ export const useTournamentStore = create<TournamentStore>()(
       },
 
       getSortedStandings: () => {
-        const { players } = get();
+        const { players, phase, playoffBracket, tripleThreatchampionId } = get();
+
+        // If tournament is complete, playoff results determine top 4 placement
+        if (phase === 'complete' && tripleThreatchampionId) {
+          const finals = playoffBracket.finals;
+          const thirdPlace = playoffBracket.thirdPlace;
+
+          // Determine 1st and 2nd place from finals
+          const firstPlaceId = tripleThreatchampionId;
+          const secondPlaceId = finals.player1Id === firstPlaceId ? finals.player2Id : finals.player1Id;
+
+          // Determine 3rd and 4th place
+          let thirdPlaceId: string | null = null;
+          let fourthPlaceId: string | null = null;
+
+          if (thirdPlace.winnerId) {
+            // 3rd place match was played
+            thirdPlaceId = thirdPlace.winnerId;
+            fourthPlaceId = thirdPlace.player1Id === thirdPlaceId ? thirdPlace.player2Id : thirdPlace.player1Id;
+          } else if (thirdPlace.skipped) {
+            // 3rd place match was skipped - use points to determine 3rd/4th
+            const semifinalLosers = [thirdPlace.player1Id, thirdPlace.player2Id].filter(Boolean) as string[];
+            const sortedLosers = semifinalLosers
+              .map(id => players.find(p => p.id === id)!)
+              .filter(Boolean)
+              .sort((a, b) => {
+                if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+                if (b.buchholzScore !== a.buchholzScore) return b.buchholzScore - a.buchholzScore;
+                return b.dominantWins - a.dominantWins;
+              });
+            thirdPlaceId = sortedLosers[0]?.id ?? null;
+            fourthPlaceId = sortedLosers[1]?.id ?? null;
+          }
+
+          // Create placement map for top 4
+          const placementMap = new Map<string, number>();
+          if (firstPlaceId) placementMap.set(firstPlaceId, 1);
+          if (secondPlaceId) placementMap.set(secondPlaceId, 2);
+          if (thirdPlaceId) placementMap.set(thirdPlaceId, 3);
+          if (fourthPlaceId) placementMap.set(fourthPlaceId, 4);
+
+          return [...players].sort((a, b) => {
+            const aPlace = placementMap.get(a.id) ?? 99;
+            const bPlace = placementMap.get(b.id) ?? 99;
+
+            // If both have playoff placements, use those
+            if (aPlace !== 99 || bPlace !== 99) {
+              return aPlace - bPlace;
+            }
+
+            // Otherwise sort by points for non-playoff players
+            if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+            if (b.buchholzScore !== a.buchholzScore) return b.buchholzScore - a.buchholzScore;
+            return b.dominantWins - a.dominantWins;
+          });
+        }
+
+        // Default sorting by points
         return [...players].sort((a, b) => {
           if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
           if (b.buchholzScore !== a.buchholzScore) return b.buchholzScore - a.buchholzScore;

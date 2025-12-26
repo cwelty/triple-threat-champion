@@ -70,7 +70,7 @@ export function RulesModal({ isOpen, onClose }: RulesModalProps) {
                 <h4 className="font-semibold text-white mb-2">The Three Games</h4>
                 <ul className="space-y-2 text-sm">
                   <li><span className="text-red-400">🎮 Smash Bros</span> - 7 minute matches</li>
-                  <li><span className="text-purple-400">♟️ Speed Chess</span> - 7 minute matches</li>
+                  <li><span className="text-purple-400">♙ Speed Chess</span> - 7 minute matches</li>
                   <li><span className="text-green-400">🏓 Ping-Pong</span> - 7 minute matches</li>
                 </ul>
               </div>
@@ -218,7 +218,7 @@ export function RulesModal({ isOpen, onClose }: RulesModalProps) {
                 <h4 className="font-semibold text-white mb-2">Champion Titles</h4>
                 <ul className="space-y-2 text-sm">
                   <li><span className="text-red-400">🎮 Smash Champion</span> - Best Smash Bros record</li>
-                  <li><span className="text-purple-400">♟️ Chess Champion</span> - Best Speed Chess record</li>
+                  <li><span className="text-purple-400">♙ Chess Champion</span> - Best Speed Chess record</li>
                   <li><span className="text-green-400">🏓 Ping-Pong Champion</span> - Best Ping-Pong record</li>
                 </ul>
               </div>

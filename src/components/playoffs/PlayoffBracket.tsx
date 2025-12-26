@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import type { Player, PlayoffBracket as BracketType, GameType, Bet } from '../../types';
 import { GAME_ICONS, GAME_NAMES } from '../../types';
 import { getAvatarEmoji } from '../../data/avatars';
@@ -34,8 +34,6 @@ export function PlayoffBracket({
   const [activeSemifinal, setActiveSemifinal] = useState<1 | 2 | null>(null);
   const [finalsResultModal, setFinalsResultModal] = useState(false);
   const [showBettingPanel, setShowBettingPanel] = useState(false);
-  const [championStage, setChampionStage] = useState<'none' | 'intro' | 'countdown' | 'reveal' | 'done'>('none');
-  const [championCountdown, setChampionCountdown] = useState(5);
 
   const getPlayer = (id: string | null) => id ? players.find((p) => p.id === id) : undefined;
 
@@ -86,159 +84,12 @@ export function PlayoffBracket({
     return allGames.find((g) => !usedFinalsGames.includes(g))!;
   };
 
-  // Check for finals winner
+  // Check for finals winner (used for display purposes)
   const finalsWinner = bracket.finals.player1Wins >= 2
     ? finalsPlayer1
     : bracket.finals.player2Wins >= 2
     ? finalsPlayer2
     : null;
-
-  // Trigger intro when there's a winner
-  useEffect(() => {
-    if (finalsWinner && championStage === 'none') {
-      setChampionStage('intro');
-    }
-  }, [finalsWinner, championStage]);
-
-  // Countdown timer
-  useEffect(() => {
-    if (championStage !== 'countdown') return;
-
-    if (championCountdown > 0) {
-      const timer = setTimeout(() => {
-        setChampionCountdown(championCountdown - 1);
-      }, 1000);
-      return () => clearTimeout(timer);
-    } else {
-      setChampionStage('reveal');
-    }
-  }, [championStage, championCountdown]);
-
-  // Stage 1: Intro screen - "And now, what you've all been waiting for..."
-  if (championStage === 'intro') {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black overflow-hidden">
-        {/* Subtle animated background */}
-        <div
-          className="absolute inset-0 opacity-30"
-          style={{
-            background: 'radial-gradient(circle at center, rgba(255,215,0,0.1) 0%, transparent 70%)',
-          }}
-        />
-
-        <div className="relative z-10 text-center space-y-8 px-4">
-          <div className="text-6xl mb-4">🏆</div>
-          <div className="space-y-4">
-            <h2 className="text-2xl md:text-3xl text-gray-400 uppercase tracking-widest"
-                style={{ fontFamily: "'Russo One', sans-serif" }}>
-              And now...
-            </h2>
-            <h1 className="text-3xl md:text-5xl text-white uppercase tracking-wider"
-                style={{ fontFamily: "'Russo One', sans-serif" }}>
-              What you've all been waiting for
-            </h1>
-          </div>
-
-          <div className="pt-8">
-            <p className="text-xl text-[#ffd700] uppercase tracking-widest mb-8"
-               style={{ fontFamily: "'Russo One', sans-serif" }}>
-              The moment of truth
-            </p>
-            <Button
-              variant="primary"
-              size="lg"
-              onClick={() => setChampionStage('countdown')}
-              className="text-xl px-10 py-4 animate-pulse"
-            >
-              Reveal Champion
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Stage 2: Countdown
-  if (championStage === 'countdown') {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black">
-        <div className="text-center">
-          <div className="text-8xl mb-8" style={{ animation: 'smash-shake 0.1s ease-in-out infinite' }}>
-            🥁
-          </div>
-          <div className="text-2xl text-gray-400 uppercase tracking-widest mb-4"
-               style={{ fontFamily: "'Russo One', sans-serif" }}>
-            Your Triple Threat Champion is...
-          </div>
-          <div
-            className="text-[200px] font-bold text-[#ffd700] leading-none"
-            style={{
-              fontFamily: "'Russo One', sans-serif",
-              textShadow: '0 0 50px rgba(255,215,0,0.8), 0 0 100px rgba(255,215,0,0.5)',
-              animation: 'smash-pulse 0.5s ease-in-out infinite'
-            }}
-          >
-            {championCountdown}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Stage 3: Champion reveal
-  if (championStage === 'reveal' && finalsWinner) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black overflow-hidden">
-        {/* Animated background rays */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background: 'conic-gradient(from 0deg, transparent 0deg, rgba(255,215,0,0.1) 10deg, transparent 20deg, rgba(255,215,0,0.15) 30deg, transparent 40deg)',
-            animation: 'yellow-rays 10s linear infinite',
-          }}
-        />
-        <div
-          className="absolute inset-0"
-          style={{
-            background: 'radial-gradient(circle at center, rgba(255,215,0,0.2) 0%, transparent 50%)',
-          }}
-        />
-
-        <div className="relative z-10 text-center animate-bounce-in">
-          <div className="text-6xl mb-6" style={{ animation: 'crown-float 2s ease-in-out infinite' }}>👑</div>
-          <div className="text-2xl text-gray-400 uppercase tracking-widest mb-6"
-               style={{ fontFamily: "'Russo One', sans-serif" }}>
-            Triple Threat Champion
-          </div>
-          <div
-            className="text-[150px] mb-4"
-            style={{
-              filter: 'drop-shadow(0 0 50px rgba(255,215,0,0.8))',
-            }}
-          >
-            {getAvatarEmoji(finalsWinner.avatar)}
-          </div>
-          <div
-            className="text-5xl md:text-7xl font-bold text-[#ffd700] uppercase tracking-wider mb-8"
-            style={{
-              fontFamily: "'Russo One', sans-serif",
-              textShadow: '0 0 30px rgba(255,215,0,0.8)',
-            }}
-          >
-            {finalsWinner.nickname}
-          </div>
-          <Button
-            variant="primary"
-            size="lg"
-            onClick={() => setChampionStage('done')}
-            className="text-xl px-8 py-4"
-          >
-            View Final Results
-          </Button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-8">
@@ -285,7 +136,7 @@ export function PlayoffBracket({
                          style={{ fontFamily: "'Russo One', sans-serif" }}>
                       {semifinal1Player1?.nickname ?? '?'}
                     </div>
-                    <div className="text-sm text-[#ffd700] font-bold mt-1">#1 SEED</div>
+                    <div className="text-sm text-gray-400 font-bold mt-1">#1 SEED</div>
                     {bracket.semifinal1.winnerId === bracket.semifinal1.player1Id && (
                       <div className="mt-2 text-green-400 font-bold uppercase animate-pulse">Winner!</div>
                     )}
@@ -504,7 +355,7 @@ export function PlayoffBracket({
                      style={{ fontFamily: "'Russo One', sans-serif" }}>
                   {finalsPlayer1.nickname}
                 </div>
-                <div className="text-sm text-[#ffd700] font-bold mb-2">#{player1Seed} SEED</div>
+                <div className="text-sm text-gray-400 font-bold mb-2">#{player1Seed} SEED</div>
                 <div className={`text-6xl md:text-8xl font-bold transition-all duration-300 ${
                   bracket.finals.player1Wins >= 2 ? 'text-[#ffd700]' : 'text-white'
                 }`} style={{ fontFamily: "'Russo One', sans-serif", textShadow: bracket.finals.player1Wins >= 2 ? '0 0 30px rgba(255,215,0,0.8)' : 'none' }}>
@@ -566,10 +417,10 @@ export function PlayoffBracket({
                 <div
                   key={gameNum}
                   className={`
-                    px-6 py-4 rounded-xl text-center transition-all duration-300
-                    ${isActive ? 'bg-[#e60012] scale-110 shadow-[0_0_30px_rgba(230,0,18,0.5)]' : ''}
+                    w-36 px-6 py-4 rounded-xl text-center transition-all duration-300
+                    ${isActive ? 'bg-red-900/50 border-2 border-[#e60012] shadow-[0_0_20px_rgba(230,0,18,0.4)]' : ''}
                     ${isCompleted ? 'bg-green-900/50 border-2 border-green-500' : ''}
-                    ${!isActive && !isCompleted ? 'bg-gray-800 opacity-50' : ''}
+                    ${!isActive && !isCompleted ? 'bg-gray-800/50 border-2 border-gray-600' : ''}
                   `}
                   style={{ animation: isActive ? 'smash-pulse 2s ease-in-out infinite' : 'none' }}
                 >

@@ -7,9 +7,10 @@ interface LeaderboardRowProps {
   rank: number;
   view: 'overall' | GameType;
   gameType: GameType | null;
+  showMedals?: boolean;
 }
 
-export function LeaderboardRow({ player, rank, view, gameType }: LeaderboardRowProps) {
+export function LeaderboardRow({ player, rank, view, gameType, showMedals = false }: LeaderboardRowProps) {
   const isTopFour = rank <= 4;
 
   const getRankClass = () => {
@@ -51,7 +52,7 @@ export function LeaderboardRow({ player, rank, view, gameType }: LeaderboardRowP
       <tr className={`
         border-b border-[#2a2a2a] transition-all duration-200 hover:bg-[#e60012]/10
         ${isTopFour ? 'bg-gradient-to-r from-[#ffd700]/5 to-transparent' : ''}
-        ${rank === 1 ? 'bg-gradient-to-r from-[#ffd700]/10 to-transparent' : ''}
+        ${rank === 1 && showMedals ? 'bg-gradient-to-r from-[#ffd700]/10 to-transparent' : ''}
       `}>
         <td className="py-3 px-4">
           <span className={getRankClass()}>
@@ -62,13 +63,13 @@ export function LeaderboardRow({ player, rank, view, gameType }: LeaderboardRowP
           <div className="flex items-center gap-3">
             <div className={`
               text-3xl p-1 rounded-lg relative
-              ${rank === 1 ? 'bg-[#ffd700]/20 shadow-[0_0_10px_rgba(255,215,0,0.3)]' : ''}
+              ${rank === 1 && showMedals ? 'bg-[#ffd700]/20 shadow-[0_0_10px_rgba(255,215,0,0.3)]' : ''}
               ${rank <= 4 ? 'transform hover:scale-110 transition-transform' : ''}
             `}>
               {getAvatarEmoji(player.avatar)}
-              {rank === 1 && <span className="absolute -top-1 -right-1 text-sm">👑</span>}
-              {rank === 2 && <span className="absolute -top-1 -right-1 text-sm">🥈</span>}
-              {rank === 3 && <span className="absolute -top-1 -right-1 text-sm">🥉</span>}
+              {showMedals && rank === 1 && <span className="absolute -top-1 -right-1 text-sm">👑</span>}
+              {showMedals && rank === 2 && <span className="absolute -top-1 -right-1 text-sm">🥈</span>}
+              {showMedals && rank === 3 && <span className="absolute -top-1 -right-1 text-sm">🥉</span>}
             </div>
             <div className="text-left">
               <div className="font-bold text-white text-sm tracking-wide"
@@ -132,6 +133,21 @@ export function LeaderboardRow({ player, rank, view, gameType }: LeaderboardRowP
           <span className={`font-bold ${player.bettingProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
             {player.bettingProfit > 0 ? '+' : ''}{player.bettingProfit}
           </span>
+        </td>
+        <td className="py-3 px-3 text-center">
+          {player.playoffSeed ? (
+            <span className={`
+              inline-flex items-center justify-center w-7 h-7 rounded-full font-bold text-sm
+              ${player.playoffSeed === 1 ? 'bg-[#ffd700] text-black' : ''}
+              ${player.playoffSeed === 2 ? 'bg-gray-300 text-black' : ''}
+              ${player.playoffSeed === 3 ? 'bg-amber-600 text-white' : ''}
+              ${player.playoffSeed === 4 ? 'bg-[#e60012] text-white' : ''}
+            `}>
+              {player.playoffSeed}
+            </span>
+          ) : (
+            <span className="text-gray-600">-</span>
+          )}
         </td>
       </tr>
     );

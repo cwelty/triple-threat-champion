@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 interface DynamicBackgroundProps {
   gamesActive?: boolean;
+  phase?: string;
 }
 
 interface Planet {
@@ -104,7 +105,7 @@ function checkCollision(p1: Planet, p2: Planet): boolean {
   return dist < minDist;
 }
 
-export function DynamicBackground({ gamesActive = false }: DynamicBackgroundProps) {
+export function DynamicBackground({ gamesActive = false, phase = '' }: DynamicBackgroundProps) {
   const [planets, setPlanets] = useState<Planet[]>([]);
   const [explosions, setExplosions] = useState<Explosion[]>([]);
   const [stars, setStars] = useState<{ x: number; y: number; size: number; twinkle: number }[]>([]);
@@ -113,9 +114,10 @@ export function DynamicBackground({ gamesActive = false }: DynamicBackgroundProp
   const animationRef = useRef<number>();
   const explosionIdRef = useRef(0);
 
-  // Spiral animation when games are active
+  // Spiral/rotation animation when games are active or in playoffs
   useEffect(() => {
-    if (!gamesActive) return;
+    const isPlayoffs = phase === 'semifinals' || phase === 'thirdPlace' || phase === 'finals' || phase === 'complete';
+    if (!gamesActive && !isPlayoffs) return;
 
     let frame = 0;
     const animateSpiral = () => {
@@ -130,7 +132,7 @@ export function DynamicBackground({ gamesActive = false }: DynamicBackgroundProp
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [gamesActive]);
+  }, [gamesActive, phase]);
 
   // Initialize planets and stars
   useEffect(() => {
@@ -365,6 +367,308 @@ export function DynamicBackground({ gamesActive = false }: DynamicBackgroundProp
           @keyframes ringPulse {
             0%, 100% { opacity: 0.3; }
             50% { opacity: 0.6; }
+          }
+        `}</style>
+      </div>
+    );
+  }
+
+  // SEMIFINALS & THIRD PLACE - Intense battle arena with red/orange energy
+  if (phase === 'semifinals' || phase === 'thirdPlace') {
+    return (
+      <div ref={containerRef} className="fixed inset-0 overflow-hidden pointer-events-none" style={{ zIndex: -1 }}>
+        {/* Dark red base */}
+        <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at center, #1a0a0a 0%, #0a0505 50%, #050202 100%)' }} />
+
+        {/* Energy clash in center */}
+        <div
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+          style={{
+            width: '150vmax',
+            height: '150vmax',
+            background: `
+              conic-gradient(from ${spiralRotation}deg,
+                transparent 0deg,
+                rgba(230, 0, 18, 0.15) 30deg,
+                transparent 60deg,
+                rgba(255, 100, 0, 0.1) 90deg,
+                transparent 120deg,
+                rgba(230, 0, 18, 0.15) 150deg,
+                transparent 180deg,
+                rgba(255, 100, 0, 0.1) 210deg,
+                transparent 240deg,
+                rgba(230, 0, 18, 0.15) 270deg,
+                transparent 300deg,
+                rgba(255, 100, 0, 0.1) 330deg,
+                transparent 360deg
+              )
+            `,
+          }}
+        />
+
+        {/* Counter-rotating energy layer */}
+        <div
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+          style={{
+            width: '120vmax',
+            height: '120vmax',
+            background: `
+              conic-gradient(from ${-spiralRotation * 0.7}deg,
+                transparent 0deg,
+                rgba(255, 50, 0, 0.1) 20deg,
+                transparent 40deg,
+                rgba(200, 0, 50, 0.08) 60deg,
+                transparent 80deg
+              )
+            `,
+          }}
+        />
+
+        {/* Lightning bolts */}
+        {[...Array(8)].map((_, i) => {
+          const angle = (i / 8) * 360 + spiralRotation * 0.3;
+          return (
+            <div
+              key={i}
+              className="absolute left-1/2 top-1/2"
+              style={{
+                width: '2px',
+                height: '40vh',
+                background: `linear-gradient(to bottom, rgba(255, 100, 50, ${0.3 + Math.sin(spiralRotation * 0.1 + i) * 0.2}) 0%, transparent 100%)`,
+                transformOrigin: 'top center',
+                transform: `translate(-50%, 0) rotate(${angle}deg)`,
+              }}
+            />
+          );
+        })}
+
+        {/* Battle energy rings */}
+        {[...Array(4)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full"
+            style={{
+              width: `${40 + i * 25}vmin`,
+              height: `${40 + i * 25}vmin`,
+              border: `2px solid rgba(230, 0, 18, ${0.4 - i * 0.08})`,
+              boxShadow: `0 0 20px rgba(230, 0, 18, ${0.3 - i * 0.05}), inset 0 0 20px rgba(230, 0, 18, ${0.1 - i * 0.02})`,
+              animation: `battleRingPulse 2s ease-in-out infinite ${i * 0.2}s`,
+            }}
+          />
+        ))}
+
+        {/* Pulsing center glow */}
+        <div
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full"
+          style={{
+            width: '50vmin',
+            height: '50vmin',
+            background: 'radial-gradient(circle, rgba(230, 0, 18, 0.3) 0%, rgba(150, 0, 0, 0.1) 50%, transparent 70%)',
+            animation: 'battlePulse 1.5s ease-in-out infinite',
+          }}
+        />
+
+        {/* Floating embers */}
+        {[...Array(20)].map((_, i) => {
+          const x = Math.sin(spiralRotation * 0.02 + i * 0.5) * 40 + 50;
+          const y = Math.cos(spiralRotation * 0.015 + i * 0.7) * 40 + 50;
+          return (
+            <div
+              key={`ember-${i}`}
+              className="absolute rounded-full"
+              style={{
+                left: `${x}%`,
+                top: `${y}%`,
+                width: `${3 + (i % 3)}px`,
+                height: `${3 + (i % 3)}px`,
+                background: i % 2 === 0 ? '#ff4400' : '#ff8800',
+                boxShadow: `0 0 ${6 + (i % 4)}px ${i % 2 === 0 ? '#ff4400' : '#ff6600'}`,
+                opacity: 0.6 + Math.sin(spiralRotation * 0.05 + i) * 0.3,
+              }}
+            />
+          );
+        })}
+
+        {/* Vignette */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: 'radial-gradient(ellipse at center, transparent 20%, rgba(0,0,0,0.7) 100%)',
+          }}
+        />
+
+        <style>{`
+          @keyframes battlePulse {
+            0%, 100% { opacity: 0.7; transform: translate(-50%, -50%) scale(1); }
+            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.15); }
+          }
+          @keyframes battleRingPulse {
+            0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
+            50% { opacity: 0.8; transform: translate(-50%, -50%) scale(1.02); }
+          }
+        `}</style>
+      </div>
+    );
+  }
+
+  // FINALS / COMPLETE - Golden championship aura
+  if (phase === 'finals' || phase === 'complete') {
+    return (
+      <div ref={containerRef} className="fixed inset-0 overflow-hidden pointer-events-none" style={{ zIndex: -1 }}>
+        {/* Deep gold/black base */}
+        <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at center, #1a1505 0%, #0a0a05 50%, #050502 100%)' }} />
+
+        {/* Majestic rotating rays */}
+        <div
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+          style={{
+            width: '400vmax',
+            height: '400vmax',
+            background: `
+              conic-gradient(from ${spiralRotation * 0.3}deg,
+                transparent 0deg,
+                rgba(255, 215, 0, 0.08) 5deg,
+                transparent 10deg,
+                rgba(255, 180, 0, 0.06) 15deg,
+                transparent 20deg
+              )
+            `,
+          }}
+        />
+
+        {/* Secondary slower rays */}
+        <div
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+          style={{
+            width: '350vmax',
+            height: '350vmax',
+            background: `
+              conic-gradient(from ${-spiralRotation * 0.15}deg,
+                transparent 0deg,
+                rgba(255, 200, 50, 0.05) 3deg,
+                transparent 6deg,
+                rgba(218, 165, 32, 0.04) 9deg,
+                transparent 12deg
+              )
+            `,
+          }}
+        />
+
+        {/* Crown-like radiating beams */}
+        {[...Array(12)].map((_, i) => {
+          const angle = (i / 12) * 360;
+          const pulse = Math.sin(spiralRotation * 0.03 + i * 0.5) * 0.3 + 0.7;
+          return (
+            <div
+              key={i}
+              className="absolute left-1/2 top-1/2"
+              style={{
+                width: '8px',
+                height: '250vmax',
+                background: `linear-gradient(to bottom,
+                  rgba(255, 215, 0, ${0.6 * pulse}) 0%,
+                  rgba(255, 200, 0, ${0.4 * pulse}) 10%,
+                  rgba(255, 180, 0, ${0.25 * pulse}) 30%,
+                  rgba(255, 160, 0, ${0.15 * pulse}) 60%,
+                  rgba(255, 140, 0, ${0.08 * pulse}) 100%)`,
+                transformOrigin: 'top center',
+                transform: `translate(-50%, 0) rotate(${angle}deg)`,
+                boxShadow: `0 0 25px rgba(255, 215, 0, ${0.5 * pulse})`,
+              }}
+            />
+          );
+        })}
+
+        {/* Championship rings */}
+        {[...Array(5)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full"
+            style={{
+              width: `${35 + i * 20}vmin`,
+              height: `${35 + i * 20}vmin`,
+              border: `2px solid rgba(255, 215, 0, ${0.5 - i * 0.08})`,
+              boxShadow: `0 0 30px rgba(255, 215, 0, ${0.2 - i * 0.03}), inset 0 0 30px rgba(255, 215, 0, ${0.1 - i * 0.015})`,
+              animation: `championRingPulse 3s ease-in-out infinite ${i * 0.3}s`,
+            }}
+          />
+        ))}
+
+        {/* Central championship glow */}
+        <div
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full"
+          style={{
+            width: '60vmin',
+            height: '60vmin',
+            background: 'radial-gradient(circle, rgba(255, 215, 0, 0.25) 0%, rgba(218, 165, 32, 0.1) 40%, transparent 70%)',
+            animation: 'championPulse 2s ease-in-out infinite',
+          }}
+        />
+
+        {/* Floating golden particles */}
+        {[...Array(30)].map((_, i) => {
+          const x = Math.sin(spiralRotation * 0.01 + i * 0.4) * 45 + 50;
+          const y = Math.cos(spiralRotation * 0.008 + i * 0.6) * 45 + 50;
+          const size = 2 + (i % 4);
+          return (
+            <div
+              key={`particle-${i}`}
+              className="absolute rounded-full"
+              style={{
+                left: `${x}%`,
+                top: `${y}%`,
+                width: `${size}px`,
+                height: `${size}px`,
+                background: i % 3 === 0 ? '#ffd700' : i % 3 === 1 ? '#ffb800' : '#fff8dc',
+                boxShadow: `0 0 ${size * 3}px rgba(255, 215, 0, 0.6)`,
+                opacity: 0.5 + Math.sin(spiralRotation * 0.04 + i) * 0.4,
+              }}
+            />
+          );
+        })}
+
+        {/* Sparkle effects */}
+        {[...Array(8)].map((_, i) => {
+          const x = 20 + (i % 4) * 20;
+          const y = 20 + Math.floor(i / 4) * 60;
+          const sparkle = Math.sin(spiralRotation * 0.1 + i * 2) > 0.7;
+          return sparkle ? (
+            <div
+              key={`sparkle-${i}`}
+              className="absolute"
+              style={{
+                left: `${x}%`,
+                top: `${y}%`,
+                width: '20px',
+                height: '20px',
+              }}
+            >
+              <div className="absolute inset-0" style={{
+                background: 'linear-gradient(0deg, transparent 40%, #fff 50%, transparent 60%)',
+              }} />
+              <div className="absolute inset-0" style={{
+                background: 'linear-gradient(90deg, transparent 40%, #fff 50%, transparent 60%)',
+              }} />
+            </div>
+          ) : null;
+        })}
+
+        {/* Vignette */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: 'radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.6) 100%)',
+          }}
+        />
+
+        <style>{`
+          @keyframes championPulse {
+            0%, 100% { opacity: 0.8; transform: translate(-50%, -50%) scale(1); }
+            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+          }
+          @keyframes championRingPulse {
+            0%, 100% { opacity: 0.4; transform: translate(-50%, -50%) scale(1); }
+            50% { opacity: 0.7; transform: translate(-50%, -50%) scale(1.01); }
           }
         `}</style>
       </div>

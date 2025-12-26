@@ -54,3 +54,31 @@ export function playSuccessSound() {
   setTimeout(() => playBeep(659, 100, 0.3), 120); // E
   setTimeout(() => playBeep(784, 200, 0.3), 240); // G
 }
+
+export function playDrumHit(intensity: number = 1) {
+  // Drum hit that gets more intense as countdown progresses
+  const baseFreq = 80;
+  const volume = Math.min(0.3 + (intensity * 0.1), 0.7);
+  playBeep(baseFreq, 100, volume);
+  setTimeout(() => playBeep(baseFreq * 1.5, 50, volume * 0.6), 50);
+}
+
+export function playChampionFanfare() {
+  // Epic fanfare for champion reveal
+  const notes = [
+    { freq: 523, delay: 0, duration: 150 },    // C
+    { freq: 659, delay: 150, duration: 150 },  // E
+    { freq: 784, delay: 300, duration: 150 },  // G
+    { freq: 1047, delay: 450, duration: 400 }, // High C
+  ];
+  notes.forEach(({ freq, delay, duration }) => {
+    setTimeout(() => playBeep(freq, duration, 0.5), delay);
+  });
+  // Add a triumphant chord
+  setTimeout(() => {
+    playBeep(523, 500, 0.3);
+    playBeep(659, 500, 0.3);
+    playBeep(784, 500, 0.3);
+    playBeep(1047, 500, 0.4);
+  }, 900);
+}

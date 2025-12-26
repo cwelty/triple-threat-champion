@@ -84,7 +84,13 @@ export function ThirdPlaceMatch({
         <div className="p-6">
           <div className="flex items-center justify-between gap-4 mb-6">
             {/* Player 1 */}
-            <div className="flex-1 text-center p-4 rounded-xl bg-[#1a1a1a]">
+            <div className={`flex-1 text-center p-4 rounded-xl transition-all duration-500 ${
+              bracket.thirdPlace.winnerId === bracket.thirdPlace.player1Id
+                ? 'bg-gradient-to-b from-green-800/60 to-green-900/60 ring-2 ring-green-400 shadow-[0_0_30px_rgba(34,197,94,0.4)] scale-105'
+                : bracket.thirdPlace.winnerId
+                ? 'bg-[#1a1a1a] opacity-40 scale-95'
+                : 'bg-[#1a1a1a]'
+            }`}>
               <div className="text-5xl mb-2">
                 {getAvatarEmoji(player1.avatar)}
               </div>
@@ -93,15 +99,24 @@ export function ThirdPlaceMatch({
                 {player1.nickname}
               </div>
               <div className="text-sm text-gray-400 font-bold mt-1">#{player1Seed} SEED</div>
+              {bracket.thirdPlace.winnerId === bracket.thirdPlace.player1Id && (
+                <div className="mt-2 text-green-400 font-bold uppercase animate-pulse">3rd Place!</div>
+              )}
             </div>
 
             {/* VS */}
-            <div className="smash-vs text-3xl" style={{ animation: 'smash-pulse 2s ease-in-out infinite' }}>
+            <div className="smash-vs text-3xl" style={{ animation: !bracket.thirdPlace.winnerId ? 'smash-pulse 2s ease-in-out infinite' : 'none' }}>
               VS
             </div>
 
             {/* Player 2 */}
-            <div className="flex-1 text-center p-4 rounded-xl bg-[#1a1a1a]">
+            <div className={`flex-1 text-center p-4 rounded-xl transition-all duration-500 ${
+              bracket.thirdPlace.winnerId === bracket.thirdPlace.player2Id
+                ? 'bg-gradient-to-b from-green-800/60 to-green-900/60 ring-2 ring-green-400 shadow-[0_0_30px_rgba(34,197,94,0.4)] scale-105'
+                : bracket.thirdPlace.winnerId
+                ? 'bg-[#1a1a1a] opacity-40 scale-95'
+                : 'bg-[#1a1a1a]'
+            }`}>
               <div className="text-5xl mb-2">
                 {getAvatarEmoji(player2.avatar)}
               </div>
@@ -110,6 +125,9 @@ export function ThirdPlaceMatch({
                 {player2.nickname}
               </div>
               <div className="text-sm text-gray-400 font-bold mt-1">#{player2Seed} SEED</div>
+              {bracket.thirdPlace.winnerId === bracket.thirdPlace.player2Id && (
+                <div className="mt-2 text-green-400 font-bold uppercase animate-pulse">3rd Place!</div>
+              )}
             </div>
           </div>
 

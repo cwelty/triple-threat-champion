@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTournamentStore } from './store/tournamentStore';
+import { playDrumHit, playChampionFanfare } from './utils/sounds';
+import { getAvatarEmoji } from './data/avatars';
 
 // Registration
 import { PlayerRegistrationForm } from './components/registration/PlayerRegistrationForm';
@@ -54,6 +56,11 @@ function App() {
   const [showBestBettorReveal, setShowBestBettorReveal] = useState(true);
   const [bestBettorRevealed, setBestBettorRevealed] = useState(false);
   const [showMatchmakingLog, setShowMatchmakingLog] = useState(false);
+
+  // Champion reveal flow states
+  const [championRevealStage, setChampionRevealStage] = useState<'none' | 'intro' | 'countdown' | 'reveal' | 'fadeOut' | 'done'>('none');
+  const [championCountdown, setChampionCountdown] = useState(10);
+  const prevTripleThreatchampionIdRef = useRef<string | null>(null);
 
   const {
     phase,
@@ -125,6 +132,34 @@ function App() {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [phase]);
 
+  // Detect when Triple Threat Champion is crowned and trigger reveal
+  useEffect(() => {
+    if (tripleThreatchampionId && tripleThreatchampionId !== prevTripleThreatchampionIdRef.current) {
+      prevTripleThreatchampionIdRef.current = tripleThreatchampionId;
+      setChampionRevealStage('intro');
+      setChampionCountdown(10);
+    }
+  }, [tripleThreatchampionId]);
+
+  // Champion reveal countdown with drum hits
+  useEffect(() => {
+    if (championRevealStage !== 'countdown') return;
+
+    if (championCountdown > 0) {
+      // Play drum hit with increasing intensity
+      const intensity = 11 - championCountdown;
+      playDrumHit(intensity);
+
+      const timer = setTimeout(() => {
+        setChampionCountdown(championCountdown - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    } else {
+      playChampionFanfare();
+      setChampionRevealStage('reveal');
+    }
+  }, [championRevealStage, championCountdown]);
+
   const usedAvatars = players.map((p) => p.avatar);
   const usedGamertags = players.map((p) => p.nickname);
   const currentRoundData = getCurrentRound();
@@ -157,7 +192,218 @@ function App() {
   return (
     <div className="min-h-screen flex flex-col smash-bg text-white bg-[#0d0d0d]">
       {/* Dynamic Background */}
-      <DynamicBackground gamesActive={gamesActive} />
+      <DynamicBackground gamesActive={gamesActive} phase={phase} />
+
+      {/* Triple Threat Champion Reveal Overlay */}
+      {championRevealStage !== 'none' && championRevealStage !== 'done' && tripleThreatchampion && (
+        <>
+          {/* Stage 1: Intro */}
+          {championRevealStage === 'intro' && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black overflow-hidden">
+              <div
+                className="absolute inset-0 opacity-30"
+                style={{
+                  background: 'radial-gradient(circle at center, rgba(255,215,0,0.1) 0%, transparent 70%)',
+                }}
+              />
+              <div className="relative z-10 text-center space-y-8 px-4">
+                <div className="text-6xl mb-4">🏆</div>
+                <div className="space-y-4">
+                  <h2 className="text-2xl md:text-3xl text-gray-400 uppercase tracking-widest"
+                      style={{ fontFamily: "'Russo One', sans-serif" }}>
+                    And now...
+                  </h2>
+                  <h1 className="text-3xl md:text-5xl text-white uppercase tracking-wider"
+                      style={{ fontFamily: "'Russo One', sans-serif" }}>
+                    What you've all been waiting for
+                  </h1>
+                </div>
+                <div className="pt-8">
+                  <p className="text-xl text-[#ffd700] uppercase tracking-widest mb-8"
+                     style={{ fontFamily: "'Russo One', sans-serif" }}>
+                    The moment of truth
+                  </p>
+                  <Button
+                    variant="primary"
+                    size="lg"
+                    onClick={() => setChampionRevealStage('countdown')}
+                    className="text-xl px-10 py-4 animate-pulse"
+                  >
+                    Reveal Champion
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Stage 2: Epic Countdown */}
+          {championRevealStage === 'countdown' && (() => {
+            const intensity = (10 - championCountdown) / 10;
+            const glowIntensity = 0.3 + intensity * 0.7;
+            const shakeSpeed = Math.max(0.05, 0.15 - intensity * 0.1);
+            const pulseSpeed = Math.max(0.2, 0.5 - intensity * 0.3);
+            const bgPulse = intensity * 0.3;
+
+            const getHypeText = () => {
+              if (championCountdown >= 8) return 'Get ready...';
+              if (championCountdown >= 6) return 'Here it comes...';
+              if (championCountdown >= 4) return 'Almost there...';
+              if (championCountdown >= 2) return 'THE MOMENT OF TRUTH!';
+              return 'YOUR CHAMPION IS...';
+            };
+
+            return (
+              <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black overflow-hidden">
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    background: `radial-gradient(circle at center, rgba(255,215,0,${bgPulse}) 0%, rgba(230,0,18,${bgPulse * 0.5}) 50%, transparent 70%)`,
+                    animation: `smash-pulse ${pulseSpeed}s ease-in-out infinite`,
+                  }}
+                />
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    background: 'conic-gradient(from 0deg, transparent 0deg, rgba(255,215,0,0.1) 5deg, transparent 10deg, rgba(255,215,0,0.05) 15deg, transparent 20deg)',
+                    animation: `spin ${Math.max(2, 8 - intensity * 6)}s linear infinite`,
+                  }}
+                />
+                <div className="relative z-10 text-center">
+                  <div className="flex justify-center gap-4 mb-6">
+                    {[...Array(Math.min(5, Math.ceil((11 - championCountdown) / 2)))].map((_, i) => (
+                      <div
+                        key={i}
+                        className="text-6xl"
+                        style={{
+                          animation: `smash-shake ${shakeSpeed}s ease-in-out infinite`,
+                          animationDelay: `${i * 0.05}s`,
+                        }}
+                      >
+                        🥁
+                      </div>
+                    ))}
+                  </div>
+                  <div
+                    className={`text-2xl md:text-3xl uppercase tracking-widest mb-6 transition-all duration-300 ${
+                      championCountdown <= 2 ? 'text-[#ffd700]' : 'text-gray-400'
+                    }`}
+                    style={{
+                      fontFamily: "'Russo One', sans-serif",
+                      textShadow: championCountdown <= 2 ? '0 0 20px rgba(255,215,0,0.8)' : 'none',
+                    }}
+                  >
+                    {getHypeText()}
+                  </div>
+                  <div
+                    className="text-[180px] md:text-[250px] font-bold leading-none"
+                    style={{
+                      fontFamily: "'Russo One', sans-serif",
+                      color: championCountdown <= 3 ? '#e60012' : '#ffd700',
+                      textShadow: `0 0 ${50 + intensity * 100}px rgba(255,215,0,${glowIntensity}), 0 0 ${100 + intensity * 150}px rgba(255,215,0,${glowIntensity * 0.7})`,
+                      animation: `smash-pulse ${pulseSpeed}s ease-in-out infinite`,
+                      transform: `scale(${1 + intensity * 0.1})`,
+                      transition: 'color 0.3s, transform 0.3s',
+                    }}
+                  >
+                    {championCountdown}
+                  </div>
+                  {championCountdown <= 3 && (
+                    <div
+                      className="mt-8 text-4xl md:text-5xl text-white uppercase tracking-wider animate-pulse"
+                      style={{
+                        fontFamily: "'Russo One', sans-serif",
+                        textShadow: '0 0 30px rgba(255,255,255,0.5)',
+                      }}
+                    >
+                      {championCountdown === 3 && '🔥 THREE 🔥'}
+                      {championCountdown === 2 && '⚡ TWO ⚡'}
+                      {championCountdown === 1 && '💥 ONE 💥'}
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Stage 3: Champion Reveal */}
+          {championRevealStage === 'reveal' && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black overflow-hidden">
+              <div
+                className="absolute inset-0"
+                style={{
+                  background: 'conic-gradient(from 0deg, transparent 0deg, rgba(255,215,0,0.1) 10deg, transparent 20deg, rgba(255,215,0,0.15) 30deg, transparent 40deg)',
+                  animation: 'spin 10s linear infinite',
+                }}
+              />
+              <div
+                className="absolute inset-0"
+                style={{
+                  background: 'radial-gradient(circle at center, rgba(255,215,0,0.2) 0%, transparent 50%)',
+                }}
+              />
+              <div className="relative z-10 text-center animate-bounce-in">
+                <div className="text-6xl mb-6" style={{ animation: 'crown-float 2s ease-in-out infinite' }}>👑</div>
+                <div className="text-2xl text-gray-400 uppercase tracking-widest mb-6"
+                     style={{ fontFamily: "'Russo One', sans-serif" }}>
+                  Triple Threat Champion
+                </div>
+                <div
+                  className="text-[150px] mb-4"
+                  style={{
+                    filter: 'drop-shadow(0 0 50px rgba(255,215,0,0.8))',
+                  }}
+                >
+                  {getAvatarEmoji(tripleThreatchampion.avatar)}
+                </div>
+                <div
+                  className="text-5xl md:text-7xl font-bold text-[#ffd700] uppercase tracking-wider mb-8"
+                  style={{
+                    fontFamily: "'Russo One', sans-serif",
+                    textShadow: '0 0 30px rgba(255,215,0,0.8)',
+                  }}
+                >
+                  {tripleThreatchampion.nickname}
+                </div>
+                <Button
+                  variant="primary"
+                  size="lg"
+                  onClick={() => setChampionRevealStage('fadeOut')}
+                  className="text-xl px-8 py-4"
+                >
+                  Continue
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Stage 4: Fade to Black Transition */}
+          {championRevealStage === 'fadeOut' && (
+            <div
+              className="fixed inset-0 z-[100] bg-black flex items-center justify-center"
+              style={{
+                animation: 'fadeInOut 3s ease-in-out forwards',
+              }}
+              onAnimationEnd={() => setChampionRevealStage('done')}
+            >
+              <div
+                className="text-center"
+                style={{
+                  animation: 'fadeTextSequence 3s ease-in-out forwards',
+                }}
+              >
+                <div className="text-4xl md:text-5xl text-gray-400 uppercase tracking-widest"
+                     style={{ fontFamily: "'Russo One', sans-serif" }}>
+                  But wait...
+                </div>
+                <div className="text-2xl text-gray-500 mt-4 uppercase tracking-wide"
+                     style={{ fontFamily: "'Russo One', sans-serif" }}>
+                  There's one more award
+                </div>
+              </div>
+            </div>
+          )}
+        </>
+      )}
 
       {/* Header - solid background to cover dynamic bg */}
       <header className="relative z-10 bg-[#0d0d0d] border-b-2 border-[#e60012] overflow-hidden">
@@ -249,6 +495,7 @@ function App() {
               getSortedStandings={getSortedStandings}
               getGameStandings={getGameStandings}
               isClosing={isLeaderboardClosing}
+              showMedals={phase === 'complete'}
             />
           </div>
         )}

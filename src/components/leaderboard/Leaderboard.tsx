@@ -8,6 +8,7 @@ interface LeaderboardProps {
   getSortedStandings: () => Player[];
   getGameStandings: (gameType: GameType) => Player[];
   isClosing?: boolean;
+  showMedals?: boolean;
 }
 
 type ViewType = 'overall' | GameType;
@@ -17,6 +18,7 @@ export function Leaderboard({
   getSortedStandings,
   getGameStandings,
   isClosing = false,
+  showMedals = false,
 }: LeaderboardProps) {
   const [view, setView] = useState<ViewType>('overall');
 
@@ -82,6 +84,7 @@ export function Leaderboard({
                   <th className="py-3 px-4 text-center">{GAME_ICONS.pingPong}</th>
                   <th className="py-3 px-4 text-center text-gray-400">BH</th>
                   <th className="py-3 px-4 text-center text-gray-400">Bets</th>
+                  <th className="py-3 px-3 text-center text-[#ffd700]" title="Playoff Seed">Seed</th>
                 </>
               ) : (
                 <>
@@ -103,6 +106,7 @@ export function Leaderboard({
                 rank={index + 1}
                 view={view}
                 gameType={gameType}
+                showMedals={showMedals}
               />
             ))}
           </tbody>
