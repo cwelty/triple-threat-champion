@@ -442,13 +442,13 @@ function App() {
             <div className="flex items-center gap-2">
               {phase !== 'registration' && phase !== 'complete' && (
                 <Button
-                  variant="secondary"
+                  variant={showLeaderboard ? 'danger' : 'secondary'}
                   size="sm"
                   onClick={handleToggleLeaderboard}
                   disabled={isLeaderboardClosing}
                   className="text-xs md:text-sm whitespace-nowrap"
                 >
-                  {showLeaderboard ? 'Hide Standings' : 'Standings'}
+                  Standings
                 </Button>
               )}
               {phase !== 'registration' && (
