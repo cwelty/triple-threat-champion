@@ -807,7 +807,7 @@ function App() {
         <div className="text-center py-6">
           <div className="flex items-center justify-center gap-3 mb-2">
             <span className="text-2xl">🎮</span>
-            <span className="text-2xl">♟️</span>
+            <span className="text-2xl">♙</span>
             <span className="text-2xl">🏓</span>
           </div>
           <p className="text-gray-500 text-sm uppercase tracking-wider"
