@@ -34,7 +34,7 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4">
+    <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop with red tint */}
       <div
         className="fixed inset-0 bg-black/80 backdrop-blur-sm"
@@ -58,14 +58,16 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
         }}
       />
 
-      {/* Modal content */}
-      <div
-        className={`
-          relative z-10 w-full mx-4 my-8
-          ${sizeClasses[size]}
-          ${isAnimating ? 'animate-zoom-in' : ''}
-        `}
-      >
+      {/* Scrollable container */}
+      <div className="min-h-full flex items-start md:items-center justify-center p-2 md:p-4">
+        {/* Modal content */}
+        <div
+          className={`
+            relative z-10 w-full my-4 md:my-8
+            ${sizeClasses[size]}
+            ${isAnimating ? 'animate-zoom-in' : ''}
+          `}
+        >
         {/* Glowing border effect */}
         <div className="absolute -inset-[2px] bg-gradient-to-r from-[#e60012] via-[#ff4444] to-[#e60012] rounded-lg opacity-75 blur-sm" />
 
@@ -107,6 +109,7 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
           {/* Bottom accent */}
           <div className="h-1 bg-gradient-to-r from-transparent via-[#e60012] to-transparent" />
         </div>
+      </div>
       </div>
     </div>
   );

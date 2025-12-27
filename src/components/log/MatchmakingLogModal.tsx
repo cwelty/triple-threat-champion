@@ -59,23 +59,23 @@ export function MatchmakingLogModal({ isOpen, onClose, logs }: MatchmakingLogMod
                   <div key={idx} className="bg-gray-800 rounded-lg overflow-hidden">
                     <button
                       onClick={() => setExpandedEntry(expandedEntry === idx ? null : idx)}
-                      className="w-full p-4 flex items-center justify-between hover:bg-gray-700/50 transition-colors"
+                      className="w-full p-3 md:p-4 flex flex-col md:flex-row md:items-center justify-between hover:bg-gray-700/50 transition-colors gap-2"
                     >
-                      <div className="flex items-center gap-4">
-                        <span className="text-2xl">{GAME_ICONS[entry.gameType]}</span>
+                      <div className="flex items-center gap-3 md:gap-4">
+                        <span className="text-xl md:text-2xl">{GAME_ICONS[entry.gameType]}</span>
                         <div className="text-left">
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-white">{entry.player1Name}</span>
-                            <span className="text-gray-500">vs</span>
-                            <span className="font-bold text-white">{entry.player2Name}</span>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-bold text-white text-sm md:text-base">{entry.player1Name}</span>
+                            <span className="text-gray-500 text-sm">vs</span>
+                            <span className="font-bold text-white text-sm md:text-base">{entry.player2Name}</span>
                           </div>
-                          <div className="text-sm text-gray-400">
+                          <div className="text-xs md:text-sm text-gray-400">
                             {GAME_NAMES[entry.gameType]}
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <span className="px-2 py-1 bg-purple-900/50 text-purple-300 rounded text-sm">
+                      <div className="flex items-center gap-2 md:gap-3 justify-between md:justify-end">
+                        <span className="px-2 py-1 bg-purple-900/50 text-purple-300 rounded text-xs md:text-sm flex-1 md:flex-none text-center">
                           {entry.reason}
                         </span>
                         <span className={`text-lg transition-transform ${expandedEntry === idx ? 'rotate-180' : ''}`}>
@@ -85,32 +85,32 @@ export function MatchmakingLogModal({ isOpen, onClose, logs }: MatchmakingLogMod
                     </button>
 
                     {expandedEntry === idx && (
-                      <div className="px-4 pb-4 space-y-3 border-t border-gray-700 pt-3">
+                      <div className="px-3 md:px-4 pb-3 md:pb-4 space-y-3 border-t border-gray-700 pt-3">
                         {/* Player Records */}
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="bg-gray-900 rounded-lg p-3">
-                            <div className="text-sm text-gray-500 uppercase tracking-wide mb-1">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
+                          <div className="bg-gray-900 rounded-lg p-2 md:p-3">
+                            <div className="text-xs md:text-sm text-gray-500 uppercase tracking-wide mb-1">
                               {entry.player1Name}
                             </div>
-                            <div className="text-white font-mono">{entry.player1Record}</div>
+                            <div className="text-white font-mono text-sm md:text-base">{entry.player1Record}</div>
                           </div>
-                          <div className="bg-gray-900 rounded-lg p-3">
-                            <div className="text-sm text-gray-500 uppercase tracking-wide mb-1">
+                          <div className="bg-gray-900 rounded-lg p-2 md:p-3">
+                            <div className="text-xs md:text-sm text-gray-500 uppercase tracking-wide mb-1">
                               {entry.player2Name}
                             </div>
-                            <div className="text-white font-mono">{entry.player2Record}</div>
+                            <div className="text-white font-mono text-sm md:text-base">{entry.player2Record}</div>
                           </div>
                         </div>
 
                         {/* Details */}
-                        <div className="bg-gray-900 rounded-lg p-3">
-                          <div className="text-sm text-gray-500 uppercase tracking-wide mb-2">
+                        <div className="bg-gray-900 rounded-lg p-2 md:p-3">
+                          <div className="text-xs md:text-sm text-gray-500 uppercase tracking-wide mb-2">
                             Decision Process
                           </div>
                           <ul className="space-y-1">
                             {entry.details.map((detail, i) => (
-                              <li key={i} className="text-sm text-gray-300 flex items-start gap-2">
-                                <span className="text-[#e60012] mt-1">•</span>
+                              <li key={i} className="text-xs md:text-sm text-gray-300 flex items-start gap-2">
+                                <span className="text-[#e60012] mt-0.5">•</span>
                                 {detail}
                               </li>
                             ))}
@@ -125,17 +125,17 @@ export function MatchmakingLogModal({ isOpen, onClose, logs }: MatchmakingLogMod
 
             {/* Skipped Games */}
             {currentLog.skippedGames.length > 0 && (
-              <div className="space-y-3">
-                <h3 className="text-lg font-bold text-purple-400 uppercase tracking-wide"
+              <div className="space-y-2 md:space-y-3">
+                <h3 className="text-base md:text-lg font-bold text-purple-400 uppercase tracking-wide"
                     style={{ fontFamily: "'Russo One', sans-serif" }}>
                   Skipped Games
                 </h3>
                 {currentLog.skippedGames.map((skip, idx) => (
-                  <div key={idx} className="bg-purple-900/20 border border-purple-500/30 rounded-lg p-4 flex items-center gap-4">
-                    <span className="text-2xl opacity-50">{GAME_ICONS[skip.gameType]}</span>
-                    <div>
-                      <div className="font-bold text-purple-400">{GAME_NAMES[skip.gameType]}</div>
-                      <div className="text-sm text-purple-300/70">{skip.reason}</div>
+                  <div key={idx} className="bg-purple-900/20 border border-purple-500/30 rounded-lg p-3 md:p-4 flex items-center gap-3 md:gap-4">
+                    <span className="text-xl md:text-2xl opacity-50">{GAME_ICONS[skip.gameType]}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-bold text-purple-400 text-sm md:text-base">{GAME_NAMES[skip.gameType]}</div>
+                      <div className="text-xs md:text-sm text-purple-300/70">{skip.reason}</div>
                     </div>
                   </div>
                 ))}
@@ -150,8 +150,8 @@ export function MatchmakingLogModal({ isOpen, onClose, logs }: MatchmakingLogMod
           </div>
         )}
 
-        {/* Legend */}
-        <div className="mt-6 pt-4 border-t border-gray-700">
+        {/* Legend - hidden on mobile to save space */}
+        <div className="hidden md:block mt-6 pt-4 border-t border-gray-700">
           <h4 className="text-sm font-bold text-gray-400 uppercase tracking-wide mb-2">
             How Matchmaking Works
           </h4>
