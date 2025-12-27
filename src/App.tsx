@@ -446,7 +446,7 @@ function App() {
                   size="sm"
                   onClick={handleToggleLeaderboard}
                   disabled={isLeaderboardClosing}
-                  className="text-xs md:text-sm whitespace-nowrap"
+                  className="text-xs md:text-sm whitespace-nowrap mr-1"
                 >
                   Standings
                 </Button>
