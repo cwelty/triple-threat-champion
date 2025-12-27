@@ -190,15 +190,23 @@ export function BettingInterface({
                   ? 'bg-gray-800 border-gray-600 opacity-50 cursor-not-allowed'
                   : 'bg-gradient-to-b from-[#ffd700]/20 to-[#daa520]/20 border-[#ffd700] cursor-grab md:cursor-grab cursor-pointer active:cursor-grabbing hover:shadow-[0_0_20px_rgba(255,215,0,0.4)]'}
                 ${draggedBettor === player.id ? 'opacity-50 ring-2 ring-white scale-110' : ''}
-                ${selectedBettor === player.id ? 'ring-4 ring-[#ffd700] scale-105 shadow-[0_0_30px_rgba(255,215,0,0.6)]' : ''}
+                ${selectedBettor === player.id ? 'ring-4 ring-[#ffd700] shadow-[0_0_30px_rgba(255,215,0,0.8)] bg-[#ffd700]/30 border-[#ffd700]' : ''}
               `}
+              style={selectedBettor === player.id ? {
+                transform: 'rotate(-3deg) scale(1.05)',
+                animation: 'pulse 1s ease-in-out infinite',
+              } : undefined}
             >
               <span className="text-2xl">{getAvatarEmoji(player.avatar)}</span>
               <span className="text-white font-bold tracking-wide"
                     style={{ fontFamily: "'Rajdhani', sans-serif" }}>
                 {player.nickname}
               </span>
-              <span className="text-[#ffd700] text-xs font-bold uppercase ml-1 animate-pulse">Bet!</span>
+              {selectedBettor === player.id ? (
+                <span className="text-white text-xs font-bold uppercase ml-1 bg-[#ffd700] px-1.5 py-0.5 rounded">Selected</span>
+              ) : (
+                <span className="text-[#ffd700] text-xs font-bold uppercase ml-1 animate-pulse">Bet!</span>
+              )}
             </div>
           ))}
 

@@ -422,70 +422,68 @@ function App() {
         {/* Red glow at bottom */}
         <div className="absolute bottom-0 left-0 right-0 h-px bg-[#e60012] shadow-[0_0_20px_rgba(230,0,18,0.8)]" />
 
-        <div className="relative max-w-6xl mx-auto px-2 md:px-4 py-2 md:py-4 flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 md:gap-3 min-w-0">
-            {/* Logo/Trophy icon */}
-            <div className="text-2xl md:text-4xl animate-bounce-in flex-shrink-0">🏆</div>
+        <div className="relative max-w-6xl mx-auto px-2 md:px-4 py-2 md:py-4 overflow-x-auto">
+          <div className="flex items-center justify-between gap-4 min-w-max">
+            <div className="flex items-center gap-2 md:gap-3">
+              {/* Logo/Trophy icon */}
+              <div className="text-2xl md:text-4xl animate-bounce-in flex-shrink-0">🏆</div>
 
-            {/* Title with Smash styling */}
-            <div className="min-w-0">
-              <h1 className="text-base md:text-3xl font-bold uppercase tracking-wider truncate"
-                  style={{ fontFamily: "'Russo One', sans-serif" }}>
-                <span className="text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">Triple</span>
-                <span className="text-[#e60012] mx-1 md:mx-2 drop-shadow-[0_0_10px_rgba(230,0,18,0.5)]">Threat</span>
-                <span className="hidden sm:inline text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">Tournament</span>
-              </h1>
+              {/* Title with Smash styling */}
+              <div>
+                <h1 className="text-lg md:text-3xl font-bold uppercase tracking-wider whitespace-nowrap"
+                    style={{ fontFamily: "'Russo One', sans-serif" }}>
+                  <span className="text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">Triple</span>
+                  <span className="text-[#e60012] mx-1 md:mx-2 drop-shadow-[0_0_10px_rgba(230,0,18,0.5)]">Threat</span>
+                  <span className="text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">Tournament</span>
+                </h1>
+              </div>
             </div>
-          </div>
 
-          <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
-            {phase !== 'registration' && phase !== 'complete' && (
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={handleToggleLeaderboard}
-                disabled={isLeaderboardClosing}
-                className="text-xs md:text-sm px-2 md:px-3"
+            <div className="flex items-center gap-2">
+              {phase !== 'registration' && phase !== 'complete' && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleToggleLeaderboard}
+                  disabled={isLeaderboardClosing}
+                  className="text-xs md:text-sm whitespace-nowrap"
+                >
+                  {showLeaderboard ? 'Hide Standings' : 'Standings'}
+                </Button>
+              )}
+              {phase !== 'registration' && (
+                <>
+                  <button
+                    onClick={() => setShowHeadToHead(true)}
+                    className="px-3 py-1.5 text-xs md:text-sm font-bold uppercase tracking-wider text-[#e60012] hover:text-white hover:bg-[#e60012] rounded-lg transition-all duration-200 hover:scale-105 hover:shadow-[0_0_15px_rgba(230,0,18,0.5)] whitespace-nowrap"
+                    style={{ fontFamily: "'Rajdhani', sans-serif" }}
+                  >
+                    Head-to-Head
+                  </button>
+                  <button
+                    onClick={() => setShowHistory(true)}
+                    className="px-3 py-1.5 text-xs md:text-sm font-bold uppercase tracking-wider text-[#e60012] hover:text-white hover:bg-[#e60012] rounded-lg transition-all duration-200 hover:scale-105 hover:shadow-[0_0_15px_rgba(230,0,18,0.5)] whitespace-nowrap"
+                    style={{ fontFamily: "'Rajdhani', sans-serif" }}
+                  >
+                    History
+                  </button>
+                </>
+              )}
+              <button
+                onClick={() => setShowRules(true)}
+                className="px-3 py-1.5 text-xs md:text-sm font-bold uppercase tracking-wider text-[#e60012] hover:text-white hover:bg-[#e60012] rounded-lg transition-all duration-200 hover:scale-105 hover:shadow-[0_0_15px_rgba(230,0,18,0.5)] whitespace-nowrap"
+                style={{ fontFamily: "'Rajdhani', sans-serif" }}
               >
-                <span className="hidden md:inline">{showLeaderboard ? 'Hide Standings' : 'Standings'}</span>
-                <span className="md:hidden">📊</span>
-              </Button>
-            )}
-            {phase !== 'registration' && (
-              <>
-                <button
-                  onClick={() => setShowHeadToHead(true)}
-                  className="px-2 md:px-3 py-1 md:py-1.5 text-xs md:text-sm font-bold uppercase tracking-wider text-[#e60012] hover:text-white hover:bg-[#e60012] rounded-lg transition-all duration-200 hover:scale-105 hover:shadow-[0_0_15px_rgba(230,0,18,0.5)]"
-                  style={{ fontFamily: "'Rajdhani', sans-serif" }}
-                >
-                  <span className="hidden md:inline">Head-to-Head</span>
-                  <span className="md:hidden">H2H</span>
-                </button>
-                <button
-                  onClick={() => setShowHistory(true)}
-                  className="hidden sm:block px-2 md:px-3 py-1 md:py-1.5 text-xs md:text-sm font-bold uppercase tracking-wider text-[#e60012] hover:text-white hover:bg-[#e60012] rounded-lg transition-all duration-200 hover:scale-105 hover:shadow-[0_0_15px_rgba(230,0,18,0.5)]"
-                  style={{ fontFamily: "'Rajdhani', sans-serif" }}
-                >
-                  History
-                </button>
-              </>
-            )}
-            <button
-              onClick={() => setShowRules(true)}
-              className="px-2 md:px-3 py-1 md:py-1.5 text-xs md:text-sm font-bold uppercase tracking-wider text-[#e60012] hover:text-white hover:bg-[#e60012] rounded-lg transition-all duration-200 hover:scale-105 hover:shadow-[0_0_15px_rgba(230,0,18,0.5)]"
-              style={{ fontFamily: "'Rajdhani', sans-serif" }}
-            >
-              <span className="hidden sm:inline">Rules</span>
-              <span className="sm:hidden">📜</span>
-            </button>
-            <button
-              onClick={() => setShowResetConfirm(true)}
-              className="px-2 md:px-3 py-1 md:py-1.5 text-xs md:text-sm font-bold uppercase tracking-wider text-gray-500 hover:text-white hover:bg-red-600 rounded-lg transition-all duration-200 hover:scale-105"
-              style={{ fontFamily: "'Rajdhani', sans-serif" }}
-            >
-              <span className="hidden sm:inline">Reset</span>
-              <span className="sm:hidden">↺</span>
-            </button>
+                Rules
+              </button>
+              <button
+                onClick={() => setShowResetConfirm(true)}
+                className="px-3 py-1.5 text-xs md:text-sm font-bold uppercase tracking-wider text-gray-500 hover:text-white hover:bg-red-600 rounded-lg transition-all duration-200 hover:scale-105 whitespace-nowrap"
+                style={{ fontFamily: "'Rajdhani', sans-serif" }}
+              >
+                Reset
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -708,7 +706,7 @@ function App() {
         <div className="fixed bottom-4 left-4 z-40">
           <button
             onClick={() => setShowMatchmakingLog(true)}
-            className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 md:py-1.5 bg-purple-900/80
+            className="flex items-center gap-1 md:gap-2 p-2 md:px-3 md:py-1.5 bg-purple-900/80
                        border border-purple-500/50 rounded-lg text-purple-300 hover:text-white
                        hover:bg-purple-800/90 hover:border-purple-400 transition-all duration-200
                        backdrop-blur-sm text-xs md:text-sm"
