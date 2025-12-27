@@ -32,6 +32,8 @@ export function BettingInterface({
   const [draggedBettor, setDraggedBettor] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [hoveredDropZone, setHoveredDropZone] = useState<string | null>(null);
+  // For mobile tap-to-bet
+  const [selectedBettor, setSelectedBettor] = useState<string | null>(null);
 
   const getPlayer = (id: string) => players.find((p) => p.id === id);
 
@@ -103,6 +105,22 @@ export function BettingInterface({
     setHoveredDropZone(null);
   };
 
+  // Mobile tap-to-bet handlers
+  const handleTapBettor = (bettorId: string) => {
+    if (isLocked) return;
+    if (selectedBettor === bettorId) {
+      setSelectedBettor(null); // Deselect if tapping same bettor
+    } else {
+      setSelectedBettor(bettorId);
+    }
+  };
+
+  const handleTapTarget = (matchId: string, playerId: string) => {
+    if (isLocked || !selectedBettor) return;
+    onPlaceBet(selectedBettor, matchId, playerId);
+    setSelectedBettor(null);
+  };
+
   // Get bettors who haven't bet yet
   const availableBettors = onDeckPlayers.filter((p) => !hasBettorBet(p.id));
   const bettorsWhoBet = onDeckPlayers.filter((p) => hasBettorBet(p.id));
@@ -147,8 +165,16 @@ export function BettingInterface({
             style={{ fontFamily: "'Russo One', sans-serif" }}>
           <span className="text-[#e60012]">On Deck</span>
           <span className="text-gray-500">-</span>
-          <span className="text-gray-400 text-sm font-normal">Drag to Place Bet</span>
+          <span className="text-gray-400 text-sm font-normal hidden md:inline">Drag to Place Bet</span>
+          <span className="text-gray-400 text-sm font-normal md:hidden">Tap to Select, Then Tap Target</span>
         </h3>
+        {selectedBettor && (
+          <div className="md:hidden mb-3 p-2 bg-[#ffd700]/20 border border-[#ffd700] rounded-lg text-center">
+            <span className="text-[#ffd700] text-sm font-bold">
+              {getPlayer(selectedBettor)?.nickname} selected - tap a player to bet on them
+            </span>
+          </div>
+        )}
 
         <div className="flex flex-wrap gap-3">
           {availableBettors.map((player) => (
@@ -157,12 +183,14 @@ export function BettingInterface({
               draggable={!isLocked}
               onDragStart={(e) => handleDragStart(e, player.id)}
               onDragEnd={handleDragEnd}
+              onClick={() => handleTapBettor(player.id)}
               className={`
-                bet-chip flex items-center gap-2 px-4 py-3 rounded-lg border-2
+                bet-chip flex items-center gap-2 px-4 py-3 rounded-lg border-2 select-none
                 ${isLocked
                   ? 'bg-gray-800 border-gray-600 opacity-50 cursor-not-allowed'
-                  : 'bg-gradient-to-b from-[#ffd700]/20 to-[#daa520]/20 border-[#ffd700] cursor-grab active:cursor-grabbing hover:shadow-[0_0_20px_rgba(255,215,0,0.4)]'}
+                  : 'bg-gradient-to-b from-[#ffd700]/20 to-[#daa520]/20 border-[#ffd700] cursor-grab md:cursor-grab cursor-pointer active:cursor-grabbing hover:shadow-[0_0_20px_rgba(255,215,0,0.4)]'}
                 ${draggedBettor === player.id ? 'opacity-50 ring-2 ring-white scale-110' : ''}
+                ${selectedBettor === player.id ? 'ring-4 ring-[#ffd700] scale-105 shadow-[0_0_30px_rgba(255,215,0,0.6)]' : ''}
               `}
             >
               <span className="text-2xl">{getAvatarEmoji(player.avatar)}</span>
@@ -227,13 +255,16 @@ export function BettingInterface({
                   onDragEnter={(e) => handleDragEnter(e, `${match.id}-${match.player1Id}`)}
                   onDragLeave={(e) => handleDragLeave(e, `${match.id}-${match.player1Id}`)}
                   onDrop={(e) => handleDrop(e, match.id, match.player1Id)}
+                  onClick={() => handleTapTarget(match.id, match.player1Id)}
                   className={`
                     flex-1 p-3 rounded-lg text-center transition-colors
                     ${hoveredDropZone === `${match.id}-${match.player1Id}`
                       ? 'border-2 border-solid border-[#ffd700] bg-[#ffd700]/20 shadow-[0_0_15px_rgba(255,215,0,0.3)]'
                       : isDragging
                         ? 'border-2 border-dashed border-blue-400 bg-blue-900/20'
-                        : 'bg-gray-700'}
+                        : selectedBettor
+                          ? 'border-2 border-dashed border-[#ffd700] bg-[#ffd700]/10 cursor-pointer'
+                          : 'bg-gray-700'}
                   `}
                 >
                   <div className="text-2xl mb-1 pointer-events-none">{player1 ? getAvatarEmoji(player1.avatar) : '?'}</div>
@@ -266,13 +297,16 @@ export function BettingInterface({
                   onDragEnter={(e) => handleDragEnter(e, `${match.id}-${match.player2Id}`)}
                   onDragLeave={(e) => handleDragLeave(e, `${match.id}-${match.player2Id}`)}
                   onDrop={(e) => handleDrop(e, match.id, match.player2Id)}
+                  onClick={() => handleTapTarget(match.id, match.player2Id)}
                   className={`
                     flex-1 p-3 rounded-lg text-center transition-colors
                     ${hoveredDropZone === `${match.id}-${match.player2Id}`
                       ? 'border-2 border-solid border-[#ffd700] bg-[#ffd700]/20 shadow-[0_0_15px_rgba(255,215,0,0.3)]'
                       : isDragging
                         ? 'border-2 border-dashed border-blue-400 bg-blue-900/20'
-                        : 'bg-gray-700'}
+                        : selectedBettor
+                          ? 'border-2 border-dashed border-[#ffd700] bg-[#ffd700]/10 cursor-pointer'
+                          : 'bg-gray-700'}
                   `}
                 >
                   <div className="text-2xl mb-1 pointer-events-none">{player2 ? getAvatarEmoji(player2.avatar) : '?'}</div>
