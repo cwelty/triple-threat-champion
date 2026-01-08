@@ -199,7 +199,7 @@ function App() {
   return (
     <div className="min-h-screen flex flex-col smash-bg text-white bg-[#0d0d0d]">
       {/* Dynamic Background */}
-      <DynamicBackground gamesActive={gamesActive} phase={phase} />
+      <DynamicBackground gamesActive={gamesActive} phase={phase} forceSpaceBackground={phase === 'complete' && showBestGamblerReveal && !bestGamblerRevealed} />
 
       {/* Triple Threat Champion Reveal Overlay */}
       {championRevealStage !== 'none' && championRevealStage !== 'done' && tripleThreatchampion && (

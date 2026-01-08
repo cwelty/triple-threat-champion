@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 interface DynamicBackgroundProps {
   gamesActive?: boolean;
   phase?: string;
+  forceSpaceBackground?: boolean;
 }
 
 interface Planet {
@@ -105,7 +106,7 @@ function checkCollision(p1: Planet, p2: Planet): boolean {
   return dist < minDist;
 }
 
-export function DynamicBackground({ gamesActive = false, phase = '' }: DynamicBackgroundProps) {
+export function DynamicBackground({ gamesActive = false, phase = '', forceSpaceBackground = false }: DynamicBackgroundProps) {
   const [planets, setPlanets] = useState<Planet[]>([]);
   const [explosions, setExplosions] = useState<Explosion[]>([]);
   const [stars, setStars] = useState<{ x: number; y: number; size: number; twinkle: number }[]>([]);
@@ -512,7 +513,7 @@ export function DynamicBackground({ gamesActive = false, phase = '' }: DynamicBa
   }
 
   // FINALS / COMPLETE - Golden championship aura
-  if (phase === 'finals' || phase === 'complete') {
+  if ((phase === 'finals' || phase === 'complete') && !forceSpaceBackground) {
     return (
       <div ref={containerRef} className="fixed inset-0 overflow-hidden pointer-events-none" style={{ zIndex: -1 }}>
         {/* Deep gold/black base */}
