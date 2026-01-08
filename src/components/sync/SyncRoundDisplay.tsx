@@ -310,7 +310,7 @@ export function SyncRoundDisplay({
           />
 
           {/* Matchups Display */}
-          <div className="grid gap-4 md:grid-cols-3 max-w-4xl mx-auto">
+          <div className="flex flex-wrap justify-center gap-4 max-w-4xl mx-auto">
             {sortedMatches.filter(m => m.winnerId === null).map((match) => {
               const player1 = getPlayer(match.player1Id);
               const player2 = getPlayer(match.player2Id);
@@ -435,7 +435,7 @@ export function SyncRoundDisplay({
           )}
 
           {/* Match Cards for Result Entry */}
-          <div className="grid gap-4 md:grid-cols-3 max-w-4xl mx-auto">
+          <div className="flex flex-wrap justify-center gap-4 max-w-4xl mx-auto">
             {sortedMatches.filter(m => m.winnerId === null).map((match) => {
               const player1 = getPlayer(match.player1Id);
               const player2 = getPlayer(match.player2Id);
