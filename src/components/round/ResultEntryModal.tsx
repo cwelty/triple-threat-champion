@@ -141,14 +141,13 @@ export function ResultEntryModal({
                 disabled={!(player1PicksFirst ? player1Character : player2Character)}
                 className="w-full bg-gray-600 text-white rounded-lg px-3 py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <option value="">Select character...</option>
+                <option value="">
+                  {(player1PicksFirst ? player1Character : player2Character) ? 'Select character...' : 'Waiting for first pick...'}
+                </option>
                 {secondPicker!.smashDraftedCharacters.map(charId => (
                   <option key={charId} value={charId}>{getCharacterName(charId)}</option>
                 ))}
               </select>
-              {!(player1PicksFirst ? player1Character : player2Character) && (
-                <p className="text-xs text-gray-500 mt-1">Waiting for first pick...</p>
-              )}
             </div>
           </div>
         )}
