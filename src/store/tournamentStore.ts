@@ -59,6 +59,8 @@ function createEmptyPlayer(id: string, name: string, nickname: string, avatar: s
     isPingPongChampion: false,
     isBestGambler: false,
     playoffSeed: null,
+    smashDraftedCharacters: [],
+    smashCharacterStats: {},
   };
 }
 
@@ -77,12 +79,16 @@ interface TournamentStore extends TournamentState {
   removePlayer: (id: string) => void;
   startTournament: () => void;
 
+  // Draft actions
+  draftCharacter: (playerId: string, characterId: string) => void;
+  completeDraft: () => void;
+
   // Round actions
   startRound: () => void;
   closeBetting: () => void;
   placeBet: (bettorId: string, matchId: string, predictedWinnerId: string) => void;
   removeBet: (bettorId: string) => void;
-  recordMatchResult: (matchId: string, winnerId: string, isDominant: boolean) => void;
+  recordMatchResult: (matchId: string, winnerId: string, isDominant: boolean, player1Character?: string, player2Character?: string) => void;
   editMatchResult: (matchId: string, newWinnerId: string, newIsDominant: boolean) => void;
   completeRound: () => void;
 
@@ -141,6 +147,10 @@ export const useTournamentStore = create<TournamentStore>()(
       pingPongChampionId: null,
       bestGamblerId: null,
       tripleThreatchampionId: null,
+      // Draft state
+      draftOrder: [],
+      currentDraftPick: 0,
+      draftedCharacters: [],
 
       // Registration actions
       registerPlayer: (name, nickname, avatar) => {
@@ -164,6 +174,73 @@ export const useTournamentStore = create<TournamentStore>()(
         // Calculate total rounds based on player count
         const totalRounds = calculateTotalRounds(players.length);
 
+        // Randomize draft order using Fisher-Yates shuffle
+        const playerIds = players.map(p => p.id);
+        for (let i = playerIds.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [playerIds[i], playerIds[j]] = [playerIds[j], playerIds[i]];
+        }
+
+        set({
+          phase: 'draft',
+          totalRounds,
+          draftOrder: playerIds,
+          currentDraftPick: 0,
+          draftedCharacters: [],
+        });
+      },
+
+      // Draft actions
+      draftCharacter: (playerId, characterId) => {
+        const { players, draftedCharacters, currentDraftPick, draftOrder } = get();
+
+        // Validate it's the correct player's turn
+        const playerCount = players.length;
+        const round = Math.floor(currentDraftPick / playerCount);
+        const positionInRound = currentDraftPick % playerCount;
+        const expectedDrafterIndex = round % 2 === 0 ? positionInRound : playerCount - 1 - positionInRound;
+        const expectedDrafterId = draftOrder[expectedDrafterIndex];
+
+        if (playerId !== expectedDrafterId) {
+          console.error('Wrong player trying to draft');
+          return;
+        }
+
+        // Validate character is not already drafted
+        if (draftedCharacters.includes(characterId)) {
+          console.error('Character already drafted');
+          return;
+        }
+
+        // Update player's drafted characters
+        const updatedPlayers = players.map(p => {
+          if (p.id === playerId) {
+            return {
+              ...p,
+              smashDraftedCharacters: [...p.smashDraftedCharacters, characterId],
+            };
+          }
+          return p;
+        });
+
+        const totalPicks = playerCount * 3;
+        const newPickNumber = currentDraftPick + 1;
+
+        set({
+          players: updatedPlayers,
+          draftedCharacters: [...draftedCharacters, characterId],
+          currentDraftPick: newPickNumber,
+        });
+
+        // Auto-complete draft if all picks are done
+        if (newPickNumber >= totalPicks) {
+          get().completeDraft();
+        }
+      },
+
+      completeDraft: () => {
+        const { players } = get();
+
         // Generate first round pairings
         const { matches, log } = generateSwissPairings(players, [], 1);
         const round: Round = {
@@ -178,7 +255,6 @@ export const useTournamentStore = create<TournamentStore>()(
         set({
           phase: 'swiss',
           currentRound: 1,
-          totalRounds,
           rounds: [round],
           matchmakingLogs: [log],
         });
@@ -277,7 +353,7 @@ export const useTournamentStore = create<TournamentStore>()(
         });
       },
 
-      recordMatchResult: (matchId, winnerId, isDominant) => {
+      recordMatchResult: (matchId, winnerId, isDominant, player1Character, player2Character) => {
         set((state) => {
           const rounds = [...state.rounds];
           const players = [...state.players];
@@ -295,11 +371,13 @@ export const useTournamentStore = create<TournamentStore>()(
           const loserId = match.player1Id === winnerId ? match.player2Id : match.player1Id;
           const points = isDominant ? 5 : 3;
 
-          // Update match
+          // Update match (including character selections for Smash)
           rounds[currentRoundIndex].matches[matchIndex] = {
             ...match,
             winnerId,
             isDominant,
+            player1Character,
+            player2Character,
           };
 
           // Update winner
@@ -315,6 +393,17 @@ export const useTournamentStore = create<TournamentStore>()(
             const gameDominantWins = match.gameType === 'smash' ? 'smashDominantWins' :
                                     match.gameType === 'chess' ? 'chessDominantWins' : 'pingPongDominantWins';
 
+            // Update smash character stats for winner
+            const winnerChar = match.player1Id === winnerId ? player1Character : player2Character;
+            let winnerCharStats = winner.smashCharacterStats;
+            if (match.gameType === 'smash' && winnerChar) {
+              const currentStats = winner.smashCharacterStats[winnerChar] || { wins: 0, losses: 0 };
+              winnerCharStats = {
+                ...winner.smashCharacterStats,
+                [winnerChar]: { ...currentStats, wins: currentStats.wins + 1 },
+              };
+            }
+
             players[winnerIndex] = {
               ...winner,
               totalPoints: winner.totalPoints + points,
@@ -325,6 +414,7 @@ export const useTournamentStore = create<TournamentStore>()(
               matchesPlayed: winner.matchesPlayed + 1,
               [gameMatches]: winner[gameMatches] + 1,
               [gameOpponents]: [...winner[gameOpponents], loserId],
+              smashCharacterStats: winnerCharStats,
             };
           }
 
@@ -339,6 +429,17 @@ export const useTournamentStore = create<TournamentStore>()(
             const gameOpponents = match.gameType === 'smash' ? 'smashOpponents' :
                                  match.gameType === 'chess' ? 'chessOpponents' : 'pingPongOpponents';
 
+            // Update smash character stats for loser
+            const loserChar = match.player1Id === loserId ? player1Character : player2Character;
+            let loserCharStats = loser.smashCharacterStats;
+            if (match.gameType === 'smash' && loserChar) {
+              const currentStats = loser.smashCharacterStats[loserChar] || { wins: 0, losses: 0 };
+              loserCharStats = {
+                ...loser.smashCharacterStats,
+                [loserChar]: { ...currentStats, losses: currentStats.losses + 1 },
+              };
+            }
+
             players[loserIndex] = {
               ...loser,
               matchRecord: { ...loser.matchRecord, losses: loser.matchRecord.losses + 1 },
@@ -346,6 +447,7 @@ export const useTournamentStore = create<TournamentStore>()(
               matchesPlayed: loser.matchesPlayed + 1,
               [gameMatches]: loser[gameMatches] + 1,
               [gameOpponents]: [...loser[gameOpponents], winnerId],
+              smashCharacterStats: loserCharStats,
             };
           }
 

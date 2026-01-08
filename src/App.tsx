@@ -7,6 +7,9 @@ import { getAvatarEmoji } from './data/avatars';
 import { PlayerRegistrationForm } from './components/registration/PlayerRegistrationForm';
 import { RegisteredPlayersList } from './components/registration/RegisteredPlayersList';
 
+// Draft
+import { SmashDraft } from './components/draft/SmashDraft';
+
 // Round
 import { RoundDisplay } from './components/round/RoundDisplay';
 
@@ -74,9 +77,13 @@ function App() {
     pingPongChampionId,
     bestGamblerId,
     tripleThreatchampionId,
+    draftOrder,
+    currentDraftPick,
+    draftedCharacters,
     registerPlayer,
     removePlayer,
     startTournament,
+    draftCharacter,
     startRound,
     closeBetting,
     placeBet,
@@ -519,6 +526,17 @@ function App() {
           </div>
         )}
 
+        {/* Draft Phase */}
+        {phase === 'draft' && (
+          <SmashDraft
+            players={players}
+            draftOrder={draftOrder}
+            currentDraftPick={currentDraftPick}
+            draftedCharacters={draftedCharacters}
+            onDraftCharacter={draftCharacter}
+          />
+        )}
+
         {/* Swiss Rounds Phase */}
         {phase === 'swiss' && currentRoundData && (
           <RoundDisplay
@@ -544,6 +562,7 @@ function App() {
               }
             }}
             totalRounds={totalRounds}
+            sortedStandings={getSortedStandings()}
           />
         )}
 

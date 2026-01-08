@@ -22,10 +22,11 @@ interface RoundDisplayProps {
   onCloseBetting: () => void;
   onPlaceBet: (bettorId: string, matchId: string, predictedWinnerId: string) => void;
   onRemoveBet: (bettorId: string) => void;
-  onRecordResult: (matchId: string, winnerId: string, isDominant: boolean) => void;
+  onRecordResult: (matchId: string, winnerId: string, isDominant: boolean, player1Character?: string, player2Character?: string) => void;
   onEditResult: (matchId: string, winnerId: string, isDominant: boolean) => void;
   onCompleteRound: () => void;
   totalRounds: number;
+  sortedStandings: Player[];
 }
 
 export function RoundDisplay({
@@ -39,6 +40,7 @@ export function RoundDisplay({
   onEditResult,
   onCompleteRound,
   totalRounds,
+  sortedStandings,
 }: RoundDisplayProps) {
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
   const [showStartConfirm, setShowStartConfirm] = useState(false);
@@ -307,11 +309,13 @@ export function RoundDisplay({
         match={selectedMatch}
         player1={selectedMatch ? getPlayer(selectedMatch.player1Id) : undefined}
         player2={selectedMatch ? getPlayer(selectedMatch.player2Id) : undefined}
-        onSubmit={(matchId, winnerId, isDominant) => {
+        player1Standing={selectedMatch ? sortedStandings.findIndex(p => p.id === selectedMatch.player1Id) + 1 : 0}
+        player2Standing={selectedMatch ? sortedStandings.findIndex(p => p.id === selectedMatch.player2Id) + 1 : 0}
+        onSubmit={(matchId, winnerId, isDominant, player1Character, player2Character) => {
           if (selectedMatch?.winnerId) {
             onEditResult(matchId, winnerId, isDominant);
           } else {
-            onRecordResult(matchId, winnerId, isDominant);
+            onRecordResult(matchId, winnerId, isDominant, player1Character, player2Character);
           }
         }}
       />

@@ -6,13 +6,16 @@ interface RulesModalProps {
   onClose: () => void;
 }
 
-type RulesSection = 'overview' | 'rounds' | 'betting' | 'scoring' | 'champions' | 'playoffs' | 'tiebreakers' | 'drinking';
+type RulesSection = 'overview' | 'pingPong' | 'smash' | 'chess' | 'rounds' | 'betting' | 'scoring' | 'champions' | 'playoffs' | 'tiebreakers' | 'drinking';
 
 export function RulesModal({ isOpen, onClose }: RulesModalProps) {
   const [activeSection, setActiveSection] = useState<RulesSection>('overview');
 
   const sections: { id: RulesSection; label: string }[] = [
     { id: 'overview', label: 'Overview' },
+    { id: 'pingPong', label: 'Ping Pong' },
+    { id: 'smash', label: 'Smash' },
+    { id: 'chess', label: 'Chess' },
     { id: 'rounds', label: 'Rounds' },
     { id: 'betting', label: 'Betting' },
     { id: 'scoring', label: 'Scoring' },
@@ -69,10 +72,246 @@ export function RulesModal({ isOpen, onClose }: RulesModalProps) {
               <div className="bg-gray-800 rounded-lg p-4">
                 <h4 className="font-semibold text-white mb-2">The Three Games</h4>
                 <ul className="space-y-2 text-sm">
-                  <li><span className="text-red-400">🎮 Smash Bros</span> - 7 minute matches</li>
-                  <li><span className="text-purple-400">♙ Speed Chess</span> - 7 minute matches</li>
-                  <li><span className="text-green-400">🏓 Ping-Pong</span> - 7 minute matches</li>
+                  <li><span className="text-red-400">🎮 Smash Bros</span> - 3 stocks, 7 min time limit</li>
+                  <li><span className="text-purple-400">♙ Speed Chess</span> - 3 min per player (blitz)</li>
+                  <li><span className="text-green-400">🏓 Ping-Pong</span> - First to 11, win by 2</li>
                 </ul>
+              </div>
+            </div>
+          )}
+
+          {activeSection === 'pingPong' && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-bold text-green-400">Ping Pong Rules</h3>
+              <p>
+                Games follow official table tennis rules. Play to 11 points, win by 2.
+              </p>
+
+              <div className="bg-gray-800 rounded-lg p-4">
+                <h4 className="font-semibold text-white mb-2">Scoring</h4>
+                <ul className="list-disc list-inside space-y-1 text-sm">
+                  <li>Games are played to <span className="text-yellow-400">11 points</span></li>
+                  <li>Must win by <span className="text-yellow-400">2 points</span></li>
+                  <li><span className="text-yellow-400">Dominant win:</span> Hold opponent to 5 or fewer points</li>
+                </ul>
+              </div>
+
+              <div className="bg-gray-800 rounded-lg p-4">
+                <h4 className="font-semibold text-white mb-2">Serving Rules</h4>
+                <ul className="list-disc list-inside space-y-1 text-sm">
+                  <li>Each side alternates serving <span className="text-yellow-400">2 points</span> at a time</li>
+                  <li><span className="text-red-400">Exception:</span> At 10-10 (deuce), service alternates every point</li>
+                  <li>Hold ball in open palm behind your end of the table</li>
+                  <li>Toss the ball at least <span className="text-yellow-400">6 inches</span> straight up</li>
+                  <li>Strike the ball on the way down</li>
+                  <li>Ball must bounce on your side first, then opponent's side</li>
+                  <li>In singles, no restriction on where the ball lands</li>
+                </ul>
+              </div>
+
+              <div className="bg-gray-800 rounded-lg p-4">
+                <h4 className="font-semibold text-white mb-2">Can You Lose on Your Serve?</h4>
+                <p className="text-sm">
+                  <span className="text-yellow-400">Yes!</span> There is no separate rule for serving on game point.
+                  You can absolutely lose the game while serving.
+                </p>
+              </div>
+
+              <div className="bg-gray-800 rounded-lg p-4">
+                <h4 className="font-semibold text-white mb-2">Let Serves</h4>
+                <p className="text-sm">
+                  If a served ball hits the net on the way over but otherwise legally bounces in play,
+                  it's a <span className="text-yellow-400">"let" serve</span> and is done over. There is no limit on let serves.
+                </p>
+              </div>
+
+              <div className="bg-gray-800 rounded-lg p-4">
+                <h4 className="font-semibold text-white mb-2">Rally Rules</h4>
+                <ul className="list-disc list-inside space-y-1 text-sm">
+                  <li><span className="text-red-400">No volleys:</span> You cannot hit the ball before it bounces on your side</li>
+                  <li>If you hit a ball that spins back over the net without opponent touching it, that's your point</li>
+                  <li>Ball touching your paddle hand during a legal hit is allowed</li>
+                  <li>Ball touching your non-paddle hand = opponent's point</li>
+                </ul>
+              </div>
+
+              <div className="bg-gray-800 rounded-lg p-4">
+                <h4 className="font-semibold text-white mb-2">Table & Edge Balls</h4>
+                <ul className="list-disc list-inside space-y-1 text-sm">
+                  <li>You may touch the table with your paddle hand or body</li>
+                  <li><span className="text-red-400">Moving the table</span> during a rally = opponent's point</li>
+                  <li>Ball hitting the <span className="text-green-400">top edge</span> of the table is valid</li>
+                  <li>Ball hitting the <span className="text-red-400">vertical sides</span> does not count</li>
+                </ul>
+              </div>
+
+              <div className="bg-gray-800 rounded-lg p-4">
+                <h4 className="font-semibold text-white mb-2">Disputes</h4>
+                <p className="text-sm">
+                  If players disagree on a call, use the <span className="text-yellow-400">honor system</span>.
+                  Find a way to agree, or play the point over.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {activeSection === 'smash' && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-bold text-red-400">Super Smash Bros Ultimate Rules</h3>
+              <p>
+                Tournament-style rules with a pre-tournament character draft system.
+              </p>
+
+              <div className="bg-red-900/30 border border-red-600 rounded-lg p-4">
+                <h4 className="font-semibold text-red-400 mb-2">Character Draft (Snake Format)</h4>
+                <p className="text-sm mb-2">
+                  Before the tournament begins, all players draft <span className="text-yellow-400">3 characters</span> each
+                  from the full Smash Ultimate roster (including DLC).
+                </p>
+                <ul className="list-disc list-inside space-y-1 text-sm">
+                  <li>Draft order is determined randomly</li>
+                  <li><span className="text-yellow-400">Snake format:</span> Order reverses each round (1-2-3...3-2-1...1-2-3...)</li>
+                  <li>Once a character is drafted, no other player may select them</li>
+                  <li>You may only play your drafted characters in tournament matches</li>
+                </ul>
+              </div>
+
+              <div className="bg-gray-800 rounded-lg p-4">
+                <h4 className="font-semibold text-white mb-2">Match Format</h4>
+                <ul className="list-disc list-inside space-y-1 text-sm">
+                  <li><span className="text-yellow-400">3 stocks</span> per player</li>
+                  <li><span className="text-yellow-400">7 minute</span> time limit</li>
+                  <li>If time runs out: <span className="text-red-400">Sudden Death</span> determines winner</li>
+                  <li><span className="text-yellow-400">Dominant win:</span> Win with all 3 stocks remaining (3-stock victory)</li>
+                </ul>
+              </div>
+
+              <div className="bg-gray-800 rounded-lg p-4">
+                <h4 className="font-semibold text-white mb-2">Character Selection Order</h4>
+                <p className="text-sm mb-2">
+                  Character selection uses <span className="text-yellow-400">leaderboard position</span>:
+                </p>
+                <ol className="list-decimal list-inside space-y-1 text-sm">
+                  <li>Player <span className="text-green-400">higher on the leaderboard</span> selects their character first</li>
+                  <li>Player <span className="text-red-400">lower on the leaderboard</span> selects second (counterpick advantage)</li>
+                  <li>Characters must be from your drafted pool of 3</li>
+                </ol>
+              </div>
+
+              <div className="bg-gray-800 rounded-lg p-4">
+                <h4 className="font-semibold text-white mb-2">Stage Selection</h4>
+                <ul className="list-disc list-inside space-y-1 text-sm">
+                  <li>Players may <span className="text-green-400">mutually agree</span> on any tournament-legal stage</li>
+                  <li>If no agreement: stage is selected <span className="text-yellow-400">randomly</span> from legal stages</li>
+                </ul>
+                <p className="text-sm mt-2 text-gray-400">
+                  Tournament legal stages: Battlefield, Small Battlefield, Final Destination,
+                  Smashville, Town & City, Pokémon Stadium 2, Kalos Pokémon League, Hollow Bastion
+                </p>
+              </div>
+
+              <div className="bg-gray-800 rounded-lg p-4">
+                <h4 className="font-semibold text-white mb-2">Additional Rules</h4>
+                <ul className="list-disc list-inside space-y-1 text-sm">
+                  <li>Items: <span className="text-red-400">Off</span></li>
+                  <li>Stage hazards: <span className="text-red-400">Off</span></li>
+                  <li>Final Smash meter: <span className="text-red-400">Off</span></li>
+                  <li>Team attack (if applicable): <span className="text-green-400">On</span></li>
+                  <li>Pause: <span className="text-red-400">Off</span> (accidental pause = warning, then stock loss)</li>
+                </ul>
+              </div>
+            </div>
+          )}
+
+          {activeSection === 'chess' && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-bold text-purple-400">Speed Chess Rules</h3>
+              <p>
+                Fast-paced chess with strict time controls. Quick thinking is essential!
+              </p>
+
+              <div className="bg-gray-800 rounded-lg p-4">
+                <h4 className="font-semibold text-white mb-2">Time Control</h4>
+                <ul className="list-disc list-inside space-y-1 text-sm">
+                  <li><span className="text-yellow-400">3 minutes</span> per player (blitz format)</li>
+                  <li>No increment (3|0)</li>
+                  <li>Use a phone app with a chess clock (e.g., Chess Clock, Chess.com app)</li>
+                  <li>Player must hit the clock with the <span className="text-yellow-400">same hand</span> that moved the piece</li>
+                </ul>
+              </div>
+
+              <div className="bg-gray-800 rounded-lg p-4">
+                <h4 className="font-semibold text-white mb-2">Determining Colors</h4>
+                <p className="text-sm mb-2">
+                  Use the classic <span className="text-yellow-400">"pawn in hand"</span> method:
+                </p>
+                <ol className="list-decimal list-inside space-y-1 text-sm">
+                  <li>One player hides a white pawn in one hand and black pawn in the other</li>
+                  <li>Opponent picks a hand</li>
+                  <li>Color revealed determines who plays that color</li>
+                </ol>
+                <p className="text-sm mt-2 text-gray-400">
+                  Alternative: Coin flip - winner chooses color
+                </p>
+              </div>
+
+              <div className="bg-gray-800 rounded-lg p-4">
+                <h4 className="font-semibold text-white mb-2">Ways to Win</h4>
+                <ul className="list-disc list-inside space-y-1 text-sm">
+                  <li><span className="text-green-400">Checkmate</span> - King is in check with no legal escape</li>
+                  <li><span className="text-green-400">Timeout</span> - Opponent's clock runs to zero</li>
+                  <li><span className="text-green-400">Resignation</span> - Opponent resigns</li>
+                </ul>
+                <p className="text-sm mt-2">
+                  <span className="text-yellow-400">Dominant win:</span> Victory by checkmate (not timeout or resignation)
+                </p>
+              </div>
+
+              <div className="bg-gray-800 rounded-lg p-4">
+                <h4 className="font-semibold text-white mb-2">Draw Conditions</h4>
+                <ul className="list-disc list-inside space-y-1 text-sm">
+                  <li><span className="text-blue-400">Stalemate</span> - No legal moves but not in check</li>
+                  <li><span className="text-blue-400">Insufficient material</span> - Neither player can checkmate (K vs K, K vs K+B, K vs K+N)</li>
+                  <li><span className="text-blue-400">Threefold repetition</span> - Same position occurs 3 times</li>
+                  <li><span className="text-blue-400">50-move rule</span> - 50 moves without pawn move or capture</li>
+                  <li><span className="text-blue-400">Mutual agreement</span> - Both players agree to draw</li>
+                  <li><span className="text-blue-400">Timeout vs insufficient material</span> - If your opponent runs out of time but you can't possibly checkmate (e.g., you only have a king), it's a draw</li>
+                </ul>
+              </div>
+
+              <div className="bg-gray-800 rounded-lg p-4">
+                <h4 className="font-semibold text-white mb-2">Touch-Move Rule</h4>
+                <p className="text-sm">
+                  <span className="text-yellow-400">Touch a piece, move that piece.</span> If you touch one of your pieces,
+                  you must move it if legal. If you touch an opponent's piece, you must capture it if legal.
+                  Adjust pieces only by saying "adjust" or "j'adoube" first.
+                </p>
+              </div>
+
+              <div className="bg-gray-800 rounded-lg p-4">
+                <h4 className="font-semibold text-white mb-2">Illegal Moves</h4>
+                <p className="text-sm">
+                  In speed chess, if you make an illegal move (e.g., moving into check, illegal castle),
+                  your opponent may claim a win or simply point out the error. Be vigilant!
+                  If neither player notices until several moves later, play continues from the current position.
+                </p>
+              </div>
+
+              <div className="bg-gray-800 rounded-lg p-4">
+                <h4 className="font-semibold text-white mb-2">Handling Draws in Tournament</h4>
+                <p className="text-sm mb-2">
+                  If a game ends in a draw, count <span className="text-yellow-400">remaining material</span> to determine the winner:
+                </p>
+                <ul className="list-disc list-inside space-y-1 text-sm">
+                  <li>Queen: <span className="text-yellow-400">9</span> points</li>
+                  <li>Rook: <span className="text-yellow-400">5</span> points</li>
+                  <li>Bishop: <span className="text-yellow-400">3</span> points</li>
+                  <li>Knight: <span className="text-yellow-400">3</span> points</li>
+                  <li>Pawn: <span className="text-yellow-400">1</span> point</li>
+                </ul>
+                <p className="text-sm mt-2">
+                  Player with more material points wins. If material is equal, player with <span className="text-yellow-400">more time remaining</span> on their clock wins.
+                </p>
               </div>
             </div>
           )}
@@ -176,13 +415,6 @@ export function RulesModal({ isOpen, onClose }: RulesModalProps) {
                   <li><span className="text-purple-400">Chess:</span> Win by checkmate</li>
                   <li><span className="text-green-400">Ping-Pong:</span> Hold opponent to 5 or fewer points</li>
                 </ul>
-              </div>
-
-              <div className="bg-gray-800 rounded-lg p-4">
-                <h4 className="font-semibold text-white mb-2">Ping-Pong Rules</h4>
-                <p className="text-sm">
-                  Games are played to <span className="text-yellow-400">11 points</span>, win by 2.
-                </p>
               </div>
 
               <div className="bg-red-900/30 border border-red-600 rounded-lg p-4">

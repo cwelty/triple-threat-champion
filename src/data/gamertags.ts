@@ -25,7 +25,7 @@ const prefixes = [
   'Long',
   'Hard',
   'Throbbing',
-  'Erected',
+  'Massive',
   'Bulging',
   'Swollen',
   'Drippy',
@@ -41,7 +41,7 @@ const middles = [
   'Sausage',
   'Banana',
   'Taco',
-  'Muffin',
+  'Smooch',
   'Biscuit',
   'Nugget',
   'Dumpling',
@@ -63,6 +63,7 @@ const middles = [
   'Butt',
   'Booty',
   'Cheek',
+  'Dawg',
 ];
 
 const suffixes = [
@@ -97,6 +98,7 @@ const suffixes = [
   'Guzzler',
   'Inhaler',
   'Enjoyer',
+  'Gremlin',
 ];
 
 const standaloneNames = [
@@ -108,7 +110,7 @@ const standaloneNames = [
   'DickWhisperer',
   'NutBuster9000',
   'CheekClapper',
-  'InfiniteBackshots',
+  'Inf. Backshots',
   'ThroatGoat',
   'SloppyToppy',
   'WetWilliam',

@@ -2,6 +2,7 @@ export type GameType = 'smash' | 'chess' | 'pingPong';
 
 export type TournamentPhase =
   | 'registration'
+  | 'draft'
   | 'swiss'
   | 'sync'
   | 'championsReveal'
@@ -51,6 +52,8 @@ export interface Player {
   isPingPongChampion: boolean;
   isBestGambler: boolean;
   playoffSeed: number | null;
+  smashDraftedCharacters: string[];
+  smashCharacterStats: Record<string, { wins: number; losses: number }>;
 }
 
 export interface Match {
@@ -71,6 +74,9 @@ export interface Match {
   isVolunteerExhausted?: boolean; // True if all eligible players have already played underserved in this game
   isVolunteerForced?: boolean; // True if volunteer was randomly assigned (all options exhausted)
   declinedVolunteerIds?: string[]; // Track who has declined to volunteer
+  // Smash character selection
+  player1Character?: string;
+  player2Character?: string;
 }
 
 export interface Bet {
@@ -131,6 +137,10 @@ export interface TournamentState {
   pingPongChampionId: string | null;
   bestGamblerId: string | null;
   tripleThreatchampionId: string | null;
+  // Draft state
+  draftOrder: string[];
+  currentDraftPick: number;
+  draftedCharacters: string[];
 }
 
 export const GAME_ICONS: Record<GameType, string> = {
