@@ -112,7 +112,8 @@ export function DynamicBackground({ gamesActive = false, phase = '', forceSpaceB
   const [stars, setStars] = useState<{ x: number; y: number; size: number; twinkle: number }[]>([]);
   const [spiralRotation, setSpiralRotation] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
-  const animationRef = useRef<number>();
+  const spiralAnimationRef = useRef<number>();
+  const planetAnimationRef = useRef<number>();
   const explosionIdRef = useRef(0);
 
   // Spiral/rotation animation when games are active or in playoffs
@@ -124,13 +125,13 @@ export function DynamicBackground({ gamesActive = false, phase = '', forceSpaceB
     const animateSpiral = () => {
       frame++;
       setSpiralRotation(frame * 0.5);
-      animationRef.current = requestAnimationFrame(animateSpiral);
+      spiralAnimationRef.current = requestAnimationFrame(animateSpiral);
     };
 
-    animationRef.current = requestAnimationFrame(animateSpiral);
+    spiralAnimationRef.current = requestAnimationFrame(animateSpiral);
     return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
+      if (spiralAnimationRef.current) {
+        cancelAnimationFrame(spiralAnimationRef.current);
       }
     };
   }, [gamesActive, phase]);
@@ -251,13 +252,13 @@ export function DynamicBackground({ gamesActive = false, phase = '', forceSpaceB
           .filter(exp => exp.frame < 30)
       );
 
-      animationRef.current = requestAnimationFrame(animate);
+      planetAnimationRef.current = requestAnimationFrame(animate);
     };
 
-    animationRef.current = requestAnimationFrame(animate);
+    planetAnimationRef.current = requestAnimationFrame(animate);
     return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
+      if (planetAnimationRef.current) {
+        cancelAnimationFrame(planetAnimationRef.current);
       }
     };
   }, []);
