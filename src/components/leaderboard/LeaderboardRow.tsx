@@ -54,7 +54,7 @@ export function LeaderboardRow({ player, rank, view, gameType, showMedals = fals
         ${isTopFour ? 'bg-gradient-to-r from-[#ffd700]/5 to-transparent' : ''}
         ${rank === 1 && showMedals ? 'bg-gradient-to-r from-[#ffd700]/10 to-transparent' : ''}
       `}>
-        <td className="py-3 px-4">
+        <td className="py-3 px-4 w-16">
           <span className={getRankClass()}>
             {rank}
           </span>
@@ -164,10 +164,9 @@ export function LeaderboardRow({ player, rank, view, gameType, showMedals = fals
   return (
     <tr className={`
       border-b border-[#2a2a2a] transition-all duration-200 hover:bg-[#e60012]/10
-      ${rank === 1 ? 'bg-gradient-to-r from-[#ffd700]/10 to-transparent' : ''}
       ${isChampion ? 'bg-gradient-to-r from-[#ffd700]/20 to-transparent' : ''}
     `}>
-      <td className="py-3 px-4">
+      <td className="py-3 px-4 w-16">
         <span className={getRankClass()}>
           {rank}
         </span>
@@ -176,7 +175,7 @@ export function LeaderboardRow({ player, rank, view, gameType, showMedals = fals
         <div className="flex items-center gap-3">
           <div className={`
             text-3xl p-1 rounded-lg relative
-            ${rank === 1 ? 'bg-[#ffd700]/20 shadow-[0_0_10px_rgba(255,215,0,0.3)]' : ''}
+            ${isChampion ? 'bg-[#ffd700]/20 shadow-[0_0_10px_rgba(255,215,0,0.3)]' : ''}
           `}>
             {getAvatarEmoji(player.avatar)}
             {isChampion && (

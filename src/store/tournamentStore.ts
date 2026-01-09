@@ -12,7 +12,7 @@ import type {
 } from '../types';
 import { generateSwissPairings, type MatchmakingLog } from '../utils/swissPairing';
 import { calculateAllBuchholz } from '../utils/buchholz';
-import { findUnderservedPlayers, findVolunteer } from '../utils/syncRounds';
+import { findUnderservedPlayers, findVolunteer, findVolunteerForAnyGame } from '../utils/syncRounds';
 import { determineGameChampion, breakTie } from '../utils/tiebreakers';
 
 // Calculate optimal number of rounds based on player count
@@ -88,6 +88,7 @@ interface TournamentStore extends TournamentState {
   closeBetting: () => void;
   placeBet: (bettorId: string, matchId: string, predictedWinnerId: string) => void;
   removeBet: (bettorId: string) => void;
+  setMatchCharacters: (matchId: string, player1Character: string, player2Character: string) => void;
   recordMatchResult: (matchId: string, winnerId: string, isDominant: boolean, player1Character?: string, player2Character?: string) => void;
   editMatchResult: (matchId: string, newWinnerId: string, newIsDominant: boolean) => void;
   completeRound: () => void;
@@ -349,6 +350,28 @@ export const useTournamentStore = create<TournamentStore>()(
               ),
             };
           }
+          return { rounds };
+        });
+      },
+
+      setMatchCharacters: (matchId, player1Character, player2Character) => {
+        set((state) => {
+          const rounds = [...state.rounds];
+          const currentRoundIndex = rounds.findIndex(
+            (r) => r.roundNumber === state.currentRound
+          );
+          if (currentRoundIndex < 0) return state;
+
+          const round = rounds[currentRoundIndex];
+          const matchIndex = round.matches.findIndex((m) => m.id === matchId);
+          if (matchIndex < 0) return state;
+
+          rounds[currentRoundIndex].matches[matchIndex] = {
+            ...round.matches[matchIndex],
+            player1Character,
+            player2Character,
+          };
+
           return { rounds };
         });
       },
@@ -666,6 +689,16 @@ export const useTournamentStore = create<TournamentStore>()(
           }
         };
 
+        // Count how many times two players have faced each other across all games
+        const getCrossGameEncounters = (p1: Player, p2: Player): number => {
+          if (!p1 || !p2) return 0;
+          let encounters = 0;
+          if (p1.smashOpponents?.includes(p2.id)) encounters++;
+          if (p1.chessOpponents?.includes(p2.id)) encounters++;
+          if (p1.pingPongOpponents?.includes(p2.id)) encounters++;
+          return encounters;
+        };
+
         // Group underserved players by their most-needed game type
         const byGameType: Record<GameType, typeof underserved> = {
           smash: [],
@@ -680,6 +713,7 @@ export const useTournamentStore = create<TournamentStore>()(
         }
 
         // First pass: pair underserved players with each other when possible
+        // Prioritize pairing players who haven't faced each other in any game
         for (const gameType of ['smash', 'chess', 'pingPong'] as GameType[]) {
           const needingGame = byGameType[gameType].filter(
             s => !assignedPlayerIds.includes(s.playerId)
@@ -691,13 +725,23 @@ export const useTournamentStore = create<TournamentStore>()(
             const player1 = players.find(p => p.id === player1Shortage.playerId)!;
             const player1Opponents = getGameOpponents(player1, gameType);
 
-            // Find another underserved player who hasn't faced player1 in this game
-            const pairIndex = needingGame.findIndex(s => {
-              return !player1Opponents.includes(s.playerId);
-            });
+            // Find valid pairs (haven't faced player1 in this game)
+            const validPairs = needingGame
+              .map((s, idx) => {
+                const p2 = players.find(p => p.id === s.playerId)!;
+                return {
+                  shortage: s,
+                  index: idx,
+                  crossGameEncounters: getCrossGameEncounters(player1, p2),
+                };
+              })
+              .filter(pair => !player1Opponents.includes(pair.shortage.playerId))
+              // Sort by cross-game encounters (prefer players who haven't faced each other)
+              .sort((a, b) => a.crossGameEncounters - b.crossGameEncounters);
 
-            if (pairIndex >= 0) {
-              const player2Shortage = needingGame.splice(pairIndex, 1)[0];
+            if (validPairs.length > 0) {
+              const bestPair = validPairs[0];
+              const player2Shortage = needingGame.splice(bestPair.index, 1)[0];
 
               assignedPlayerIds.push(player1Shortage.playerId, player2Shortage.playerId);
 
@@ -728,42 +772,41 @@ export const useTournamentStore = create<TournamentStore>()(
         }
 
         // Second pass: remaining underserved players get volunteers
+        // Try alternate game types if no volunteer available for the first choice
         for (const shortage of underserved) {
           if (assignedPlayerIds.includes(shortage.playerId)) continue;
 
-          const gameType = shortage.smashNeeded > 0 ? 'smash' :
-                          shortage.chessNeeded > 0 ? 'chess' : 'pingPong';
-
-          // Exclude players already assigned to sync matches
-          const volunteerResult = findVolunteer(
+          // Try to find a volunteer for any game type the player needs
+          const volunteerResult = findVolunteerForAnyGame(
             players,
-            shortage.playerId,
-            gameType,
+            shortage,
             assignedPlayerIds
           );
 
-          if (volunteerResult.volunteer) {
+          if (volunteerResult.volunteer && volunteerResult.gameType) {
             assignedPlayerIds.push(volunteerResult.volunteer.id);
+
+            syncMatches.push({
+              id: crypto.randomUUID(),
+              roundNumber: syncRoundNumber,
+              gameType: volunteerResult.gameType,
+              player1Id: shortage.playerId,
+              player2Id: volunteerResult.volunteer.id,
+              winnerId: null,
+              isDominant: false,
+              isSyncRound: true,
+              isPlayoff: false,
+              playoffRound: null,
+              underservedPlayerId: shortage.playerId,
+              volunteerId: volunteerResult.volunteer.id,
+              isVolunteerExhausted: volunteerResult.isExhausted,
+              isVolunteerForced: false,
+            });
+
+            assignedPlayerIds.push(shortage.playerId);
           }
-
-          syncMatches.push({
-            id: crypto.randomUUID(),
-            roundNumber: syncRoundNumber,
-            gameType,
-            player1Id: shortage.playerId,
-            player2Id: volunteerResult.volunteer?.id ?? '',
-            winnerId: null,
-            isDominant: false,
-            isSyncRound: true,
-            isPlayoff: false,
-            playoffRound: null,
-            underservedPlayerId: shortage.playerId,
-            volunteerId: volunteerResult.volunteer?.id ?? null,
-            isVolunteerExhausted: volunteerResult.isExhausted,
-            isVolunteerForced: volunteerResult.isForced,
-          });
-
-          assignedPlayerIds.push(shortage.playerId);
+          // If no volunteer available for any game type without a rematch,
+          // skip this player for now (they may get matched in a future sync round)
         }
 
         const round: Round = {
@@ -825,18 +868,14 @@ export const useTournamentStore = create<TournamentStore>()(
               volunteerId: volunteerResult.volunteer.id,
               declinedVolunteerIds: [...declinedIds, currentVolunteerId].filter(Boolean) as string[],
               isVolunteerExhausted: volunteerResult.isExhausted,
-              isVolunteerForced: volunteerResult.isForced,
-            };
-          } else {
-            // No more volunteers available (shouldn't happen with forced selection)
-            rounds[syncRoundIndex].matches[syncMatchIndex] = {
-              ...match,
-              player2Id: '',
-              volunteerId: null,
-              declinedVolunteerIds: [...declinedIds, currentVolunteerId].filter(Boolean) as string[],
-              isVolunteerExhausted: true,
               isVolunteerForced: false,
             };
+          } else {
+            // No more volunteers available without causing a rematch
+            // Remove the match entirely - player may get matched in a future sync round
+            rounds[syncRoundIndex].matches = rounds[syncRoundIndex].matches.filter(
+              (_, idx) => idx !== syncMatchIndex
+            );
           }
 
           return { rounds };
@@ -967,9 +1006,9 @@ export const useTournamentStore = create<TournamentStore>()(
           const players = calculateAllBuchholz(state.players);
 
           // Determine game champions (but don't apply bonuses yet - that happens during reveal)
-          const smashChampion = determineGameChampion(players, 'smash');
-          const chessChampion = determineGameChampion(players, 'chess');
-          const pingPongChampion = determineGameChampion(players, 'pingPong');
+          const smashChampion = determineGameChampion(players, 'smash', rounds);
+          const chessChampion = determineGameChampion(players, 'chess', rounds);
+          const pingPongChampion = determineGameChampion(players, 'pingPong', rounds);
 
           return {
             rounds,

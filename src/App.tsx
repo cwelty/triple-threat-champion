@@ -88,6 +88,7 @@ function App() {
     closeBetting,
     placeBet,
     removeBet,
+    setMatchCharacters,
     recordMatchResult,
     editMatchResult,
     completeRound,
@@ -548,6 +549,7 @@ function App() {
               placeBet(bettorId, matchId, predictedWinnerId);
             }}
             onRemoveBet={removeBet}
+            onSetMatchCharacters={setMatchCharacters}
             onRecordResult={recordMatchResult}
             onEditResult={editMatchResult}
             onCompleteRound={() => {

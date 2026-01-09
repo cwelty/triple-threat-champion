@@ -108,7 +108,7 @@ export function MatchHistoryModal({
                             {player1 ? getAvatarEmoji(player1.avatar) : '?'}
                           </span>
                           <div className="flex-1 min-w-0">
-                            <div className="font-medium text-white truncate">
+                            <div className="font-medium text-white text-xs">
                               {player1?.nickname ?? '?'}
                             </div>
                             {isPlayer1Winner && (
@@ -135,7 +135,7 @@ export function MatchHistoryModal({
                             {player2 ? getAvatarEmoji(player2.avatar) : '?'}
                           </span>
                           <div className="flex-1 min-w-0">
-                            <div className="font-medium text-white truncate">
+                            <div className="font-medium text-white text-xs">
                               {player2?.nickname ?? '?'}
                             </div>
                             {isPlayer2Winner && (

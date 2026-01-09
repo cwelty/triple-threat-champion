@@ -4,6 +4,7 @@ import { MatchCard } from './MatchCard';
 import { BettingTimer, BettingTimerRef } from './BettingTimer';
 import { BettingInterface } from './BettingInterface';
 import { ResultEntryModal } from './ResultEntryModal';
+import { SmashCharacterSelectModal } from './SmashCharacterSelectModal';
 import { Button } from '../ui/Button';
 import { Modal } from '../ui/Modal';
 import { playWarningBeep, playTimerEndSound } from '../../utils/sounds';
@@ -22,6 +23,7 @@ interface RoundDisplayProps {
   onCloseBetting: () => void;
   onPlaceBet: (bettorId: string, matchId: string, predictedWinnerId: string) => void;
   onRemoveBet: (bettorId: string) => void;
+  onSetMatchCharacters: (matchId: string, player1Character: string, player2Character: string) => void;
   onRecordResult: (matchId: string, winnerId: string, isDominant: boolean, player1Character?: string, player2Character?: string) => void;
   onEditResult: (matchId: string, winnerId: string, isDominant: boolean) => void;
   onCompleteRound: () => void;
@@ -36,6 +38,7 @@ export function RoundDisplay({
   onCloseBetting,
   onPlaceBet,
   onRemoveBet,
+  onSetMatchCharacters,
   onRecordResult,
   onEditResult,
   onCompleteRound,
@@ -43,6 +46,7 @@ export function RoundDisplay({
   sortedStandings,
 }: RoundDisplayProps) {
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
+  const [characterSelectMatch, setCharacterSelectMatch] = useState<Match | null>(null);
   const [showStartConfirm, setShowStartConfirm] = useState(false);
   const [timerExpired, setTimerExpired] = useState(false);
   const [showEndConfirm, setShowEndConfirm] = useState(false);
@@ -86,6 +90,14 @@ export function RoundDisplay({
     hasPlayedOneMinWarning.current = false;
     hasPlayedTimerEnd.current = false;
   }, [round.roundNumber]);
+
+  // Restore timer if betting is already closed (e.g., after page refresh)
+  useEffect(() => {
+    if (!round.bettingOpen && !gamesStarted && !allMatchesComplete) {
+      setGamesStarted(true);
+      setGameTimeLeft(7 * 60); // Reset to 7 minutes
+    }
+  }, [round.bettingOpen, gamesStarted, allMatchesComplete]);
 
   const handleStartGames = () => {
     setShowStartConfirm(false);
@@ -162,7 +174,7 @@ export function RoundDisplay({
 
       {/* Time's Up */}
       {gamesStarted && gameTimeLeft === 0 && !allMatchesComplete && (
-        <div className="smash-card border-[#ffd700] text-center py-6"
+        <div className="smash-card border-[#ffd700] text-center pt-8 pb-6"
              style={{ animation: 'smash-shake 0.5s ease-in-out infinite' }}>
           <div className="text-4xl font-bold text-[#ffd700] uppercase tracking-wider mb-2"
                style={{ fontFamily: "'Russo One', sans-serif", textShadow: '0 0 20px rgba(255,215,0,0.5)' }}>
@@ -207,6 +219,7 @@ export function RoundDisplay({
               player1={getPlayer(match.player1Id)}
               player2={getPlayer(match.player2Id)}
               onSelectWinner={setSelectedMatch}
+              onSelectCharacters={setCharacterSelectMatch}
               showResult={true}
             />
           ))}
@@ -309,14 +322,27 @@ export function RoundDisplay({
         match={selectedMatch}
         player1={selectedMatch ? getPlayer(selectedMatch.player1Id) : undefined}
         player2={selectedMatch ? getPlayer(selectedMatch.player2Id) : undefined}
-        player1Standing={selectedMatch ? sortedStandings.findIndex(p => p.id === selectedMatch.player1Id) + 1 : 0}
-        player2Standing={selectedMatch ? sortedStandings.findIndex(p => p.id === selectedMatch.player2Id) + 1 : 0}
-        onSubmit={(matchId, winnerId, isDominant, player1Character, player2Character) => {
+        onSubmit={(matchId, winnerId, isDominant) => {
           if (selectedMatch?.winnerId) {
             onEditResult(matchId, winnerId, isDominant);
           } else {
-            onRecordResult(matchId, winnerId, isDominant, player1Character, player2Character);
+            onRecordResult(matchId, winnerId, isDominant);
           }
+        }}
+      />
+
+      {/* Smash Character Select Modal */}
+      <SmashCharacterSelectModal
+        isOpen={characterSelectMatch !== null}
+        onClose={() => setCharacterSelectMatch(null)}
+        match={characterSelectMatch!}
+        player1={characterSelectMatch ? getPlayer(characterSelectMatch.player1Id) : undefined}
+        player2={characterSelectMatch ? getPlayer(characterSelectMatch.player2Id) : undefined}
+        player1Standing={characterSelectMatch ? sortedStandings.findIndex(p => p.id === characterSelectMatch.player1Id) + 1 : 0}
+        player2Standing={characterSelectMatch ? sortedStandings.findIndex(p => p.id === characterSelectMatch.player2Id) + 1 : 0}
+        onConfirm={(matchId, player1Char, player2Char) => {
+          onSetMatchCharacters(matchId, player1Char, player2Char);
+          setCharacterSelectMatch(null);
         }}
       />
     </div>

@@ -110,7 +110,7 @@ const standaloneNames = [
   'DickWhisperer',
   'NutBuster9000',
   'CheekClapper',
-  'Inf. Backshots',
+  '∞ Backshots',
   'ThroatGoat',
   'SloppyToppy',
   'WetWilliam',
@@ -131,6 +131,7 @@ const standaloneNames = [
   'BoxMuncher',
   'MoeLester',
   'BarryMcCockiner',
+  'DickerDown18',
 ];
 
 export function generateVulgarGamertag(): string {

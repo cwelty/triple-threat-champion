@@ -73,6 +73,15 @@ export function SyncRoundDisplay({
     return () => clearInterval(timer);
   }, [gameTimeLeft]);
 
+  // Restore timer if betting is already closed (e.g., after page refresh)
+  useEffect(() => {
+    const incompleteMatches = round.matches.filter((m) => m.winnerId === null);
+    if (!round.bettingOpen && !gamesStarted && incompleteMatches.length > 0) {
+      setGamesStarted(true);
+      setGameTimeLeft(7 * 60); // Reset to 7 minutes
+    }
+  }, [round.bettingOpen, gamesStarted, round.matches]);
+
   const handleStartGames = () => {
     setShowStartConfirm(false);
     onCloseBetting();
@@ -341,11 +350,11 @@ export function SyncRoundDisplay({
                     <div className="flex items-center justify-center gap-3">
                       {/* Player 1 */}
                       <div className="flex flex-col items-center">
-                        <div className="relative w-28 text-center p-3 rounded-lg bg-[#1a1a1a]">
+                        <div className="relative min-w-28 text-center p-3 rounded-lg bg-[#1a1a1a]">
                           <div className="text-5xl mb-2">
                             {player1 ? getAvatarEmoji(player1.avatar) : '?'}
                           </div>
-                          <div className="font-bold text-white tracking-wide text-[11px] leading-tight"
+                          <div className="font-bold text-white tracking-wide text-[9px] leading-tight"
                                style={{ fontFamily: "'Rajdhani', sans-serif" }}>
                             {player1?.nickname ?? 'Unknown'}
                           </div>
@@ -358,11 +367,11 @@ export function SyncRoundDisplay({
 
                       {/* Player 2 */}
                       <div className="flex flex-col items-center">
-                        <div className="relative w-28 text-center p-3 rounded-lg bg-[#1a1a1a]">
+                        <div className="relative min-w-28 text-center p-3 rounded-lg bg-[#1a1a1a]">
                           <div className="text-5xl mb-2">
                             {player2 ? getAvatarEmoji(player2.avatar) : '?'}
                           </div>
-                          <div className="font-bold text-white tracking-wide text-[11px] leading-tight"
+                          <div className="font-bold text-white tracking-wide text-[9px] leading-tight"
                                style={{ fontFamily: "'Rajdhani', sans-serif" }}>
                             {player2?.nickname ?? 'Unknown'}
                           </div>
@@ -424,7 +433,7 @@ export function SyncRoundDisplay({
 
           {/* Time's Up */}
           {gamesStarted && gameTimeLeft === 0 && (
-            <div className="smash-card border-[#ffd700] text-center py-6"
+            <div className="smash-card border-[#ffd700] text-center pt-8 pb-6"
                  style={{ animation: 'smash-shake 0.5s ease-in-out infinite' }}>
               <div className="text-4xl font-bold text-[#ffd700] uppercase tracking-wider mb-2"
                    style={{ fontFamily: "'Russo One', sans-serif", textShadow: '0 0 20px rgba(255,215,0,0.5)' }}>
@@ -466,11 +475,11 @@ export function SyncRoundDisplay({
                     <div className="flex items-center justify-center gap-3">
                       {/* Player 1 */}
                       <div className="flex flex-col items-center">
-                        <div className="relative w-28 text-center p-3 rounded-lg bg-[#1a1a1a]">
+                        <div className="relative min-w-28 text-center p-3 rounded-lg bg-[#1a1a1a]">
                           <div className="text-5xl mb-2">
                             {player1 ? getAvatarEmoji(player1.avatar) : '?'}
                           </div>
-                          <div className="font-bold text-white tracking-wide text-[11px] leading-tight"
+                          <div className="font-bold text-white tracking-wide text-[9px] leading-tight"
                                style={{ fontFamily: "'Rajdhani', sans-serif" }}>
                             {player1?.nickname ?? 'Unknown'}
                           </div>
@@ -483,11 +492,11 @@ export function SyncRoundDisplay({
 
                       {/* Player 2 */}
                       <div className="flex flex-col items-center">
-                        <div className="relative w-28 text-center p-3 rounded-lg bg-[#1a1a1a]">
+                        <div className="relative min-w-28 text-center p-3 rounded-lg bg-[#1a1a1a]">
                           <div className="text-5xl mb-2">
                             {player2 ? getAvatarEmoji(player2.avatar) : '?'}
                           </div>
-                          <div className="font-bold text-white tracking-wide text-[11px] leading-tight"
+                          <div className="font-bold text-white tracking-wide text-[9px] leading-tight"
                                style={{ fontFamily: "'Rajdhani', sans-serif" }}>
                             {player2?.nickname ?? 'Unknown'}
                           </div>
@@ -547,12 +556,12 @@ export function SyncRoundDisplay({
                     <div className="flex items-center justify-center gap-4 mb-2">
                       <div className={`text-center ${winner?.id === underservedPlayer?.id ? '' : 'opacity-50'}`}>
                         <div className="text-2xl">{underservedPlayer ? getAvatarEmoji(underservedPlayer.avatar) : '?'}</div>
-                        <div className="text-xs text-white font-medium truncate max-w-[70px]">{underservedPlayer?.nickname}</div>
+                        <div className="text-[10px] text-white font-medium">{underservedPlayer?.nickname}</div>
                       </div>
                       <div className="text-gray-500 font-bold text-xs">VS</div>
                       <div className={`text-center ${winner?.id === volunteerPlayer?.id ? '' : 'opacity-50'}`}>
                         <div className="text-2xl">{volunteerPlayer ? getAvatarEmoji(volunteerPlayer.avatar) : '?'}</div>
-                        <div className="text-xs text-white font-medium truncate max-w-[70px]">{volunteerPlayer?.nickname}</div>
+                        <div className="text-[10px] text-white font-medium">{volunteerPlayer?.nickname}</div>
                       </div>
                     </div>
                     <div className="text-green-400 text-xs font-semibold">

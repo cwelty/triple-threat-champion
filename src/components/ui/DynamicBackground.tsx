@@ -628,32 +628,6 @@ export function DynamicBackground({ gamesActive = false, phase = '', forceSpaceB
           );
         })}
 
-        {/* Sparkle effects */}
-        {[...Array(8)].map((_, i) => {
-          const x = 20 + (i % 4) * 20;
-          const y = 20 + Math.floor(i / 4) * 60;
-          const sparkle = Math.sin(spiralRotation * 0.1 + i * 2) > 0.7;
-          return sparkle ? (
-            <div
-              key={`sparkle-${i}`}
-              className="absolute"
-              style={{
-                left: `${x}%`,
-                top: `${y}%`,
-                width: '20px',
-                height: '20px',
-              }}
-            >
-              <div className="absolute inset-0" style={{
-                background: 'linear-gradient(0deg, transparent 40%, #fff 50%, transparent 60%)',
-              }} />
-              <div className="absolute inset-0" style={{
-                background: 'linear-gradient(90deg, transparent 40%, #fff 50%, transparent 60%)',
-              }} />
-            </div>
-          ) : null;
-        })}
-
         {/* Vignette */}
         <div
           className="absolute inset-0"

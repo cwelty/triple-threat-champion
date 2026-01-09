@@ -47,12 +47,25 @@ function getGameOpponents(player: Player, gameType: GameType): string[] {
   }
 }
 
-function canMatch(player1: Player, player2: Player, gameType: GameType, allowRematches: boolean): boolean {
-  if (player1.id === player2.id) return false;
-  if (allowRematches) return true;
-
+function hasPlayedInGame(player1: Player, player2: Player, gameType: GameType): boolean {
   const opponents = getGameOpponents(player1, gameType);
-  return !opponents.includes(player2.id);
+  return opponents.includes(player2.id);
+}
+
+function canMatch(player1: Player, player2: Player, gameType: GameType): boolean {
+  if (player1.id === player2.id) return false;
+  // Never allow rematches in the same game type
+  return !hasPlayedInGame(player1, player2, gameType);
+}
+
+// Count how many times two players have faced each other across all games
+function getCrossGameEncounters(player1: Player, player2: Player): number {
+  if (!player1 || !player2) return 0;
+  let encounters = 0;
+  if (player1.smashOpponents?.includes(player2.id)) encounters++;
+  if (player1.chessOpponents?.includes(player2.id)) encounters++;
+  if (player1.pingPongOpponents?.includes(player2.id)) encounters++;
+  return encounters;
 }
 
 function getEligiblePlayers(
@@ -91,93 +104,194 @@ interface PairingResult {
   details: string[];
 }
 
+interface ScoredPair {
+  p1: PairingCandidate;
+  p2: PairingCandidate;
+  crossGameEncounters: number;
+  recordDiff: number;
+  scarcity: number; // How few options the players have (higher = more urgent to match)
+  isLastChance: boolean; // True if this is the last game type where these players can meet
+}
+
+// Count how many valid opponents a player has left in this game
+function countRemainingOptions(
+  player: PairingCandidate,
+  allCandidates: PairingCandidate[],
+  gameType: GameType
+): number {
+  if (!player || !allCandidates) return 0;
+  return allCandidates.filter(c =>
+    c?.player?.id !== player.player.id &&
+    canMatch(player.player, c.player, gameType)
+  ).length;
+}
+
+// Check if this game type is the last opportunity for two players to meet
+// (they haven't played each other, and one or both have completed 2/3 games in the other two types)
+function isLastChanceToMeet(p1: Player, p2: Player, currentGame: GameType): boolean {
+  if (!p1 || !p2) return false;
+
+  // If they've already played in any game, not a "last chance" situation
+  if (getCrossGameEncounters(p1, p2) > 0) return false;
+
+  // Check other game types
+  const otherGames: GameType[] = (['smash', 'chess', 'pingPong'] as GameType[])
+    .filter(g => g !== currentGame);
+
+  let canMeetInOtherGames = 0;
+  for (const game of otherGames) {
+    const p1Played = getGameMatchesPlayed(p1, game);
+    const p2Played = getGameMatchesPlayed(p2, game);
+    const p1Opponents = getGameOpponents(p1, game) || [];
+
+    // Can they still meet in this other game?
+    // Both must have <3 matches AND not have played each other
+    if (p1Played < 3 && p2Played < 3 && !p1Opponents.includes(p2.id)) {
+      canMeetInOtherGames++;
+    }
+  }
+
+  // If they can't meet in any other game, this is their last chance
+  return canMeetInOtherGames === 0;
+}
+
 function findPairForGame(
   candidates: PairingCandidate[],
-  gameType: GameType,
-  allowRematches: boolean
+  gameType: GameType
 ): PairingResult | null {
-  if (candidates.length < 2) return null;
+  if (!candidates || candidates.length < 2) return null;
 
   const sorted = sortCandidates(candidates);
   const details: string[] = [];
 
   details.push(`${candidates.length} eligible players for this game`);
 
-  // Group by record (wins - losses)
-  const recordGroups = new Map<number, PairingCandidate[]>();
-  for (const c of sorted) {
-    const score = c.gameRecord.wins - c.gameRecord.losses;
-    if (!recordGroups.has(score)) {
-      recordGroups.set(score, []);
-    }
-    recordGroups.get(score)!.push(c);
-  }
-
-  // Try to pair within same record group first
-  const sortedScores = [...recordGroups.keys()].sort((a, b) => b - a);
-
-  details.push(`Record groups: ${sortedScores.map(s => `${s >= 0 ? '+' : ''}${s} (${recordGroups.get(s)!.length})`).join(', ')}`);
-
-  for (const score of sortedScores) {
-    const group = recordGroups.get(score)!;
-    if (group.length >= 2) {
-      // Try all pairs within this group
-      for (let i = 0; i < group.length - 1; i++) {
-        for (let j = i + 1; j < group.length; j++) {
-          if (canMatch(group[i].player, group[j].player, gameType, allowRematches)) {
-            const reason = `Same record group (${score >= 0 ? '+' : ''}${score})`;
-            details.push(`Matched players with identical ${score >= 0 ? '+' : ''}${score} record`);
-            return { pair: [group[i], group[j]], reason, details };
-          }
-        }
-      }
-    }
-  }
-
-  // If no same-record pair found, pair adjacent groups
-  for (let i = 0; i < sortedScores.length - 1; i++) {
-    const higherGroup = recordGroups.get(sortedScores[i])!;
-    const lowerGroup = recordGroups.get(sortedScores[i + 1])!;
-
-    for (const higher of higherGroup) {
-      for (const lower of lowerGroup) {
-        if (canMatch(higher.player, lower.player, gameType, allowRematches)) {
-          const reason = `Adjacent record groups (${sortedScores[i] >= 0 ? '+' : ''}${sortedScores[i]} vs ${sortedScores[i + 1] >= 0 ? '+' : ''}${sortedScores[i + 1]})`;
-          details.push(`No same-record pairs available, matched adjacent groups`);
-          return { pair: [higher, lower], reason, details };
-        }
-      }
-    }
-  }
-
-  // Fallback: try any pair
+  // Collect all valid pairs with their scores
+  const validPairs: ScoredPair[] = [];
   for (let i = 0; i < sorted.length - 1; i++) {
     for (let j = i + 1; j < sorted.length; j++) {
-      if (canMatch(sorted[i].player, sorted[j].player, gameType, allowRematches)) {
-        const reason = 'Best available pairing';
-        details.push(`No adjacent-group pairs available, matched best available`);
-        return { pair: [sorted[i], sorted[j]], reason, details };
+      if (canMatch(sorted[i].player, sorted[j].player, gameType)) {
+        const crossGameEncounters = getCrossGameEncounters(sorted[i].player, sorted[j].player);
+        const record1 = sorted[i].gameRecord.wins - sorted[i].gameRecord.losses;
+        const record2 = sorted[j].gameRecord.wins - sorted[j].gameRecord.losses;
+        const recordDiff = Math.abs(record1 - record2);
+
+        // Calculate scarcity: how few options do these players have?
+        // Lower options = higher scarcity = should be prioritized
+        const options1 = countRemainingOptions(sorted[i], sorted, gameType);
+        const options2 = countRemainingOptions(sorted[j], sorted, gameType);
+        const minOptions = Math.min(options1, options2);
+        // Invert so fewer options = higher scarcity score
+        const scarcity = 10 - minOptions;
+
+        // Check if this is the last chance for these players to meet
+        const isLastChance = isLastChanceToMeet(sorted[i].player, sorted[j].player, gameType);
+
+        validPairs.push({
+          p1: sorted[i],
+          p2: sorted[j],
+          crossGameEncounters,
+          recordDiff,
+          scarcity,
+          isLastChance,
+        });
       }
     }
   }
 
-  // Last resort: allow rematches
-  if (!allowRematches && sorted.length >= 2) {
-    details.push(`No valid pairs without rematches, allowing rematches`);
-    const result = findPairForGame(candidates, gameType, true);
-    if (result) {
-      result.reason = `Rematch allowed - ${result.reason}`;
-      result.details = [...details, ...result.details];
-    }
-    return result;
+  if (validPairs.length === 0) {
+    details.push('No valid pairs available (all eligible players have already faced each other in this game)');
+    return null;
   }
 
-  return null;
+  // Sort pairs with multiple priorities:
+  // 1. Last chance pairings (players who haven't met and this is their only remaining opportunity)
+  // 2. First-time matchups (crossGameEncounters === 0)
+  // 3. Critical scarcity (≤2 options left)
+  // 4. Fewer cross-game encounters
+  // 5. Higher scarcity (as tiebreaker)
+  // 6. Skill level difference
+  validPairs.sort((a, b) => {
+    // Primary: Last chance pairings - MUST happen or players will never meet
+    if (a.isLastChance !== b.isLastChance) {
+      return a.isLastChance ? -1 : 1;
+    }
+
+    // Secondary: First-time matchups (never played in any game)
+    const aFirstTime = a.crossGameEncounters === 0;
+    const bFirstTime = b.crossGameEncounters === 0;
+    if (aFirstTime !== bFirstTime) {
+      return aFirstTime ? -1 : 1;
+    }
+
+    // Tertiary: Critical scarcity (player has ≤2 options left)
+    const aCritical = a.scarcity >= 8;
+    const bCritical = b.scarcity >= 8;
+    if (aCritical !== bCritical) {
+      return aCritical ? -1 : 1;
+    }
+
+    // Quaternary: Fewer cross-game encounters
+    if (a.crossGameEncounters !== b.crossGameEncounters) {
+      return a.crossGameEncounters - b.crossGameEncounters;
+    }
+
+    // Quinary: Higher scarcity as tiebreaker
+    if (a.scarcity !== b.scarcity) {
+      return b.scarcity - a.scarcity;
+    }
+
+    // Senary: Closest skill level
+    return a.recordDiff - b.recordDiff;
+  });
+
+  const bestPair = validPairs[0];
+  const record1 = bestPair.p1.gameRecord.wins - bestPair.p1.gameRecord.losses;
+  const record2 = bestPair.p2.gameRecord.wins - bestPair.p2.gameRecord.losses;
+
+  let reason: string;
+  if (bestPair.crossGameEncounters === 0) {
+    reason = 'First-time matchup';
+    details.push(`Players have never faced each other in any game`);
+  } else if (bestPair.crossGameEncounters < 3) {
+    reason = `Cross-game encounters: ${bestPair.crossGameEncounters}/3`;
+    details.push(`Players have faced each other in ${bestPair.crossGameEncounters} other game(s)`);
+  } else {
+    reason = 'All opponents faced in other games';
+    details.push(`Players have already played in all 3 games, but not in ${gameType}`);
+  }
+
+  if (bestPair.recordDiff === 0) {
+    details.push(`Same record group (${record1 >= 0 ? '+' : ''}${record1})`);
+  } else {
+    details.push(`Record difference: ${record1 >= 0 ? '+' : ''}${record1} vs ${record2 >= 0 ? '+' : ''}${record2}`);
+  }
+
+  return { pair: [bestPair.p1, bestPair.p2], reason, details };
 }
 
 export interface SwissPairingResult {
   matches: Match[];
   log: MatchmakingLog;
+}
+
+// Calculate how "needed" a game type is based on underserved players
+function calculateGameNeed(
+  players: Player[],
+  gameType: GameType,
+  assignedPlayerIds: Set<string>
+): number {
+  let totalNeed = 0;
+  for (const player of players) {
+    if (assignedPlayerIds.has(player.id)) continue;
+    const matchesPlayed = getGameMatchesPlayed(player, gameType);
+    if (matchesPlayed < 3) {
+      // Higher weight for players who have played fewer matches in this game
+      // Also factor in total matches played (prioritize globally underserved players)
+      totalNeed += (3 - matchesPlayed) * 10 + (9 - player.matchesPlayed);
+    }
+  }
+  return totalNeed;
 }
 
 export function generateSwissPairings(
@@ -191,12 +305,12 @@ export function generateSwissPairings(
   const assignedPlayerIds = new Set<string>();
   const gameTypes: GameType[] = ['smash', 'chess', 'pingPong'];
 
-  // Shuffle game order to avoid bias
+  // Shuffle game order to avoid bias, but use smart pairing within each game
   const shuffledGames = [...gameTypes].sort(() => Math.random() - 0.5);
 
   for (const gameType of shuffledGames) {
     const candidates = getEligiblePlayers(players, gameType, assignedPlayerIds);
-    const result = findPairForGame(candidates, gameType, false);
+    const result = findPairForGame(candidates, gameType);
 
     if (result) {
       const { pair, reason, details } = result;
@@ -229,22 +343,27 @@ export function generateSwissPairings(
         reason,
         details,
       });
+    }
+  }
+
+  // Log skipped games (games where no match was created)
+  for (const gameType of gameTypes) {
+    if (matches.some(m => m.gameType === gameType)) continue;
+
+    const candidates = getEligiblePlayers(players, gameType, assignedPlayerIds);
+    if (candidates.length < 2) {
+      const eligibleNames = candidates.map(c => c.player.nickname).join(', ') || 'none';
+      skippedGames.push({
+        gameType,
+        reason: candidates.length === 0
+          ? 'No eligible players (all assigned or completed 3 matches)'
+          : `Only 1 eligible player: ${eligibleNames}`,
+      });
     } else {
-      // Log why we couldn't create a match
-      if (candidates.length < 2) {
-        const eligibleNames = candidates.map(c => c.player.nickname).join(', ') || 'none';
-        skippedGames.push({
-          gameType,
-          reason: candidates.length === 0
-            ? 'No eligible players (all assigned or completed 3 matches)'
-            : `Only 1 eligible player: ${eligibleNames}`,
-        });
-      } else {
-        skippedGames.push({
-          gameType,
-          reason: 'No valid pairings possible (all players have faced each other)',
-        });
-      }
+      skippedGames.push({
+        gameType,
+        reason: 'No valid pairings possible (all players have faced each other)',
+      });
     }
   }
 

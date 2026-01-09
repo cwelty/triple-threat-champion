@@ -42,7 +42,12 @@ export function SmashDraft({
   const currentDrafter = players.find(p => p.id === currentDrafterId);
 
   const charactersBySeriesMap = getCharactersGroupedBySeries();
-  const seriesList = Object.keys(charactersBySeriesMap);
+  // Sort series by character count (most to least), with "Other" always at the bottom
+  const seriesList = Object.keys(charactersBySeriesMap).sort((a, b) => {
+    if (a === 'Other') return 1;
+    if (b === 'Other') return -1;
+    return charactersBySeriesMap[b].length - charactersBySeriesMap[a].length;
+  });
 
   const handleCharacterClick = (characterId: string) => {
     if (draftedCharacters.includes(characterId)) return;
@@ -69,7 +74,7 @@ export function SmashDraft({
           <p className="text-gray-400 text-sm mb-2">NOW DRAFTING</p>
           <div className="flex items-center justify-center gap-4">
             <span className="text-5xl">{getAvatarEmoji(currentDrafter.avatar)}</span>
-            <div>
+            <div className="text-left">
               <p className="text-2xl font-bold text-white">{currentDrafter.nickname}</p>
               <p className="text-gray-400">{currentDrafter.name}</p>
             </div>

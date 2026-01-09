@@ -40,6 +40,16 @@ function getGameOpponents(player: Player, gameType: GameType): string[] {
   }
 }
 
+// Count how many times two players have faced each other across all games
+function getCrossGameEncounters(player1: Player, player2: Player): number {
+  if (!player1 || !player2) return 0;
+  let encounters = 0;
+  if (player1.smashOpponents?.includes(player2.id)) encounters++;
+  if (player1.chessOpponents?.includes(player2.id)) encounters++;
+  if (player1.pingPongOpponents?.includes(player2.id)) encounters++;
+  return encounters;
+}
+
 export interface VolunteerResult {
   volunteer: Player | null;
   isExhausted: boolean; // True if all eligible players have already played the underserved in this game
@@ -71,19 +81,27 @@ export function findVolunteer(
   );
 
   // Filter out players who have already played the underserved player in this game type
+  // Never allow same-game rematches
   const availableVolunteers = eligiblePlayers
     .filter((p) => !underservedOpponents.includes(p.id))
     .map((p) => {
       const record = getGameRecord(p, gameType);
       const score = record.wins - record.losses;
+      const crossGameEncounters = getCrossGameEncounters(underserved, p);
       return {
         player: p,
         recordDiff: Math.abs(score - underservedScore),
+        crossGameEncounters,
       };
     })
-    .sort((a, b) => a.recordDiff - b.recordDiff);
+    // Sort: prioritize fewest cross-game encounters, then closest skill level
+    .sort((a, b) => {
+      if (a.crossGameEncounters !== b.crossGameEncounters) {
+        return a.crossGameEncounters - b.crossGameEncounters;
+      }
+      return a.recordDiff - b.recordDiff;
+    });
 
-  // Best case: volunteer who hasn't played underserved in this game
   if (availableVolunteers.length > 0) {
     return {
       volunteer: availableVolunteers[0].player,
@@ -93,44 +111,13 @@ export function findVolunteer(
     };
   }
 
-  // Second best: volunteer who HAS played underserved but wasn't excluded
-  const fallbackVolunteers = eligiblePlayers
-    .map((p) => {
-      const record = getGameRecord(p, gameType);
-      const score = record.wins - record.losses;
-      return {
-        player: p,
-        recordDiff: Math.abs(score - underservedScore),
-      };
-    })
-    .sort((a, b) => a.recordDiff - b.recordDiff);
-
-  if (fallbackVolunteers.length > 0) {
-    return {
-      volunteer: fallbackVolunteers[0].player,
-      isExhausted: true,
-      isForced: false,
-      eligibleCount: eligiblePlayers.length,
-    };
-  }
-
-  // Last resort: ALL eligible players were excluded (declined or assigned elsewhere)
-  // Randomly select from all completed players (ignoring exclusions)
-  if (allCompletedPlayers.length > 0) {
-    const randomIndex = Math.floor(Math.random() * allCompletedPlayers.length);
-    return {
-      volunteer: allCompletedPlayers[randomIndex],
-      isExhausted: true,
-      isForced: true,
-      eligibleCount: allCompletedPlayers.length,
-    };
-  }
-
+  // No volunteer available without a same-game rematch
+  // Return null - caller should try a different game type
   return {
     volunteer: null,
     isExhausted: true,
     isForced: false,
-    eligibleCount: 0,
+    eligibleCount: eligiblePlayers.length,
   };
 }
 
@@ -139,4 +126,41 @@ export function getNeededGame(shortage: PlayerShortage): GameType | null {
   if (shortage.chessNeeded > 0) return 'chess';
   if (shortage.pingPongNeeded > 0) return 'pingPong';
   return null;
+}
+
+// Get all game types the player still needs, in priority order
+export function getNeededGames(shortage: PlayerShortage): GameType[] {
+  const games: GameType[] = [];
+  if (shortage.smashNeeded > 0) games.push('smash');
+  if (shortage.chessNeeded > 0) games.push('chess');
+  if (shortage.pingPongNeeded > 0) games.push('pingPong');
+  return games;
+}
+
+// Find a volunteer for an underserved player, trying each needed game type
+// until one is found without requiring a rematch
+export function findVolunteerForAnyGame(
+  players: Player[],
+  shortage: PlayerShortage,
+  excludeIds: string[] = []
+): { volunteer: Player | null; gameType: GameType | null; isExhausted: boolean } {
+  const neededGames = getNeededGames(shortage);
+
+  for (const gameType of neededGames) {
+    const result = findVolunteer(players, shortage.playerId, gameType, excludeIds);
+    if (result.volunteer) {
+      return {
+        volunteer: result.volunteer,
+        gameType,
+        isExhausted: result.isExhausted,
+      };
+    }
+  }
+
+  // No volunteer available for any needed game type without a rematch
+  return {
+    volunteer: null,
+    gameType: null,
+    isExhausted: true,
+  };
 }

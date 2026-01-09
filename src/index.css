@@ -54,6 +54,11 @@ body {
   50% { transform: scale(1.02); }
 }
 
+@keyframes rank-1-pulse {
+  0%, 100% { transform: skewX(-5deg) scale(1); }
+  50% { transform: skewX(-5deg) scale(1.02); }
+}
+
 @keyframes punch-right {
   0%, 100% { transform: scaleX(-1) translateX(0); }
   50% { transform: scaleX(-1) translateX(-15px); }
@@ -267,7 +272,7 @@ body {
   background: linear-gradient(135deg, #ffd700 0%, #daa520 100%);
   color: #000;
   box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
-  animation: smash-pulse 2s ease-in-out infinite;
+  animation: rank-1-pulse 2s ease-in-out infinite;
 }
 
 .rank-2 {

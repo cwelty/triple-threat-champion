@@ -9,6 +9,7 @@ interface MatchCardProps {
   player1: Player | undefined;
   player2: Player | undefined;
   onSelectWinner?: (match: Match) => void;
+  onSelectCharacters?: (match: Match) => void;
   showResult?: boolean;
 }
 
@@ -23,12 +24,18 @@ export function MatchCard({
   player1,
   player2,
   onSelectWinner,
+  onSelectCharacters,
   showResult = false,
 }: MatchCardProps) {
   const isComplete = match.winnerId !== null;
   const colors = gameColors[match.gameType];
   const isPlayer1Winner = isComplete && match.winnerId === match.player1Id;
   const isPlayer2Winner = isComplete && match.winnerId === match.player2Id;
+
+  // For Smash matches, check if characters have been selected
+  const isSmash = match.gameType === 'smash';
+  const hasCharactersSelected = isSmash && match.player1Character && match.player2Character;
+  const needsCharacterSelection = isSmash && !hasCharactersSelected && !isComplete;
 
   return (
     <div className={`
@@ -67,7 +74,7 @@ export function MatchCard({
           <div className="flex flex-col items-center">
             <div
               className={`
-                relative w-32 text-center p-3 rounded-lg transition-all duration-300
+                relative min-w-32 text-center p-3 rounded-lg transition-all duration-300
                 ${isPlayer1Winner
                   ? 'bg-gradient-to-b from-green-800/60 to-green-900/60 ring-2 ring-green-400 shadow-[0_0_15px_rgba(34,197,94,0.3)]'
                   : isComplete
@@ -79,7 +86,7 @@ export function MatchCard({
               <div className={`text-5xl mb-2 ${isPlayer1Winner ? 'animate-bounce-in' : ''}`}>
                 {player1 ? getAvatarEmoji(player1.avatar) : '?'}
               </div>
-              <div className="font-bold text-white truncate tracking-wide text-sm"
+              <div className="font-bold text-white tracking-wide text-xs"
                    style={{ fontFamily: "'Rajdhani', sans-serif" }}>
                 {player1?.nickname ?? 'Unknown'}
               </div>
@@ -96,7 +103,7 @@ export function MatchCard({
           <div className="flex flex-col items-center">
             <div
               className={`
-                relative w-32 text-center p-3 rounded-lg transition-all duration-300
+                relative min-w-32 text-center p-3 rounded-lg transition-all duration-300
                 ${isPlayer2Winner
                   ? 'bg-gradient-to-b from-green-800/60 to-green-900/60 ring-2 ring-green-400 shadow-[0_0_15px_rgba(34,197,94,0.3)]'
                   : isComplete
@@ -108,7 +115,7 @@ export function MatchCard({
               <div className={`text-5xl mb-2 ${isPlayer2Winner ? 'animate-bounce-in' : ''}`}>
                 {player2 ? getAvatarEmoji(player2.avatar) : '?'}
               </div>
-              <div className="font-bold text-white truncate tracking-wide text-sm"
+              <div className="font-bold text-white tracking-wide text-xs"
                    style={{ fontFamily: "'Rajdhani', sans-serif" }}>
                 {player2?.nickname ?? 'Unknown'}
               </div>
@@ -119,16 +126,26 @@ export function MatchCard({
           </div>
         </div>
 
-        {/* Enter Result button for incomplete matches */}
-        {onSelectWinner && !isComplete && (
+        {/* Button for incomplete matches */}
+        {!isComplete && (
           <div className="mt-6">
-            <Button
-              onClick={() => onSelectWinner(match)}
-              variant="primary"
-              className="w-full"
-            >
-              Enter Result
-            </Button>
+            {needsCharacterSelection && onSelectCharacters ? (
+              <Button
+                onClick={() => onSelectCharacters(match)}
+                variant="primary"
+                className="w-full"
+              >
+                Select Characters
+              </Button>
+            ) : onSelectWinner ? (
+              <Button
+                onClick={() => onSelectWinner(match)}
+                variant="primary"
+                className="w-full"
+              >
+                Enter Result
+              </Button>
+            ) : null}
           </div>
         )}
 

@@ -71,7 +71,7 @@ export function Leaderboard({
           <thead>
             <tr className="text-left text-xs uppercase tracking-wider border-b-2 border-[#e60012]/30"
                 style={{ fontFamily: "'Russo One', sans-serif" }}>
-              <th className="py-3 px-4 text-[#e60012]">Rank</th>
+              <th className="py-3 px-4 text-[#e60012] w-16">Rank</th>
               <th className="py-3 px-2 text-[#e60012]">Player</th>
               {view === 'overall' ? (
                 <>

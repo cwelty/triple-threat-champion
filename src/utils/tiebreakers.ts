@@ -1,4 +1,4 @@
-import type { Player, GameType } from '../types';
+import type { Player, GameType, Round } from '../types';
 
 function getGameRecord(player: Player, gameType: GameType): { wins: number; losses: number } {
   switch (gameType) {
@@ -22,6 +22,33 @@ function getGameOpponents(player: Player, gameType: GameType): string[] {
     case 'chess': return player.chessOpponents;
     case 'pingPong': return player.pingPongOpponents;
   }
+}
+
+// Returns head-to-head record: positive if player1 won more, negative if player2 won more, 0 if tied or no matches
+function getHeadToHead(player1Id: string, player2Id: string, gameType: GameType, rounds: Round[]): number {
+  let player1Wins = 0;
+  let player2Wins = 0;
+
+  for (const round of rounds) {
+    for (const match of round.matches) {
+      if (match.gameType !== gameType) continue;
+      if (!match.winnerId) continue;
+
+      const isMatchBetweenPlayers =
+        (match.player1Id === player1Id && match.player2Id === player2Id) ||
+        (match.player1Id === player2Id && match.player2Id === player1Id);
+
+      if (isMatchBetweenPlayers) {
+        if (match.winnerId === player1Id) {
+          player1Wins++;
+        } else if (match.winnerId === player2Id) {
+          player2Wins++;
+        }
+      }
+    }
+  }
+
+  return player1Wins - player2Wins;
 }
 
 export function breakTie(a: Player, b: Player, gameType?: GameType): number {
@@ -89,7 +116,7 @@ export function breakTie(a: Player, b: Player, gameType?: GameType): number {
   return Math.random() - 0.5;
 }
 
-export function determineGameChampion(players: Player[], gameType: GameType): Player | null {
+export function determineGameChampion(players: Player[], gameType: GameType, rounds?: Round[]): Player | null {
   const sorted = [...players].sort((a, b) => {
     const aRecord = getGameRecord(a, gameType);
     const bRecord = getGameRecord(b, gameType);
@@ -102,6 +129,35 @@ export function determineGameChampion(players: Player[], gameType: GameType): Pl
     // Use tiebreaker
     return breakTie(a, b, gameType);
   });
+
+  // Check for 2-way tie at the top and apply head-to-head tiebreaker
+  if (sorted.length >= 2 && rounds) {
+    const first = sorted[0];
+    const second = sorted[1];
+    const firstRecord = getGameRecord(first, gameType);
+    const secondRecord = getGameRecord(second, gameType);
+
+    // Only apply head-to-head if exactly 2 players are tied at the top (same wins)
+    if (firstRecord.wins === secondRecord.wins) {
+      // Check if there's a third player also tied
+      const third = sorted[2];
+      const thirdIsTied = third && getGameRecord(third, gameType).wins === firstRecord.wins;
+
+      // Only use head-to-head for exactly 2-way ties
+      if (!thirdIsTied) {
+        const aOpponents = getGameOpponents(first, gameType);
+        // Only use head-to-head if they've played each other
+        if (aOpponents.includes(second.id)) {
+          const h2h = getHeadToHead(first.id, second.id, gameType, rounds);
+          if (h2h < 0) {
+            // Second player won head-to-head, swap them
+            return second;
+          }
+          // h2h > 0 means first player won, h2h === 0 means tied - keep original order
+        }
+      }
+    }
+  }
 
   return sorted[0] ?? null;
 }

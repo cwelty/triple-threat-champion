@@ -268,7 +268,7 @@ export function BettingInterface({
                   `}
                 >
                   <div className="text-2xl mb-1 pointer-events-none">{player1 ? getAvatarEmoji(player1.avatar) : '?'}</div>
-                  <div className="font-medium text-white text-sm truncate pointer-events-none">{player1?.nickname ?? '?'}</div>
+                  <div className="font-medium text-white text-xs pointer-events-none">{player1?.nickname ?? '?'}</div>
 
                   {/* Show bettors who picked this player */}
                   {betsOnPlayer1.length > 0 && (
@@ -310,7 +310,7 @@ export function BettingInterface({
                   `}
                 >
                   <div className="text-2xl mb-1 pointer-events-none">{player2 ? getAvatarEmoji(player2.avatar) : '?'}</div>
-                  <div className="font-medium text-white text-sm truncate pointer-events-none">{player2?.nickname ?? '?'}</div>
+                  <div className="font-medium text-white text-xs pointer-events-none">{player2?.nickname ?? '?'}</div>
 
                   {/* Show bettors who picked this player */}
                   {betsOnPlayer2.length > 0 && (
