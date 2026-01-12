@@ -5,11 +5,13 @@ import { getAvatarEmoji } from '../../data/avatars';
 import { Button } from '../ui/Button';
 import { GamePicker } from './GamePicker';
 import { ResultEntryModal } from '../round/ResultEntryModal';
+import { SmashCharacterSelectModal } from '../round/SmashCharacterSelectModal';
 
 interface ThirdPlaceMatchProps {
   bracket: PlayoffBracket;
   players: Player[];
   onSelectGame: (gameType: GameType) => void;
+  onSetCharacters: (player1Character: string, player2Character: string) => void;
   onRecordResult: (winnerId: string) => void;
   onSkip: () => void;
   playoffBets: Bet[];
@@ -21,6 +23,7 @@ export function ThirdPlaceMatch({
   bracket,
   players,
   onSelectGame,
+  onSetCharacters,
   onRecordResult,
   onSkip,
   playoffBets,
@@ -29,6 +32,7 @@ export function ThirdPlaceMatch({
 }: ThirdPlaceMatchProps) {
   const [showResultModal, setShowResultModal] = useState(false);
   const [showBettingPanel, setShowBettingPanel] = useState(false);
+  const [showCharacterSelect, setShowCharacterSelect] = useState(false);
 
   const getPlayer = (id: string | null) => id ? players.find((p) => p.id === id) : undefined;
 
@@ -163,9 +167,15 @@ export function ThirdPlaceMatch({
                   </span>
                 </div>
               </div>
-              <Button variant="primary" size="lg" className="w-full" onClick={() => setShowResultModal(true)}>
-                Enter Result
-              </Button>
+              {bracket.thirdPlace.gameType === 'smash' && !bracket.thirdPlace.player1Character ? (
+                <Button variant="secondary" size="lg" className="w-full" onClick={() => setShowCharacterSelect(true)}>
+                  Select Characters
+                </Button>
+              ) : (
+                <Button variant="primary" size="lg" className="w-full" onClick={() => setShowResultModal(true)}>
+                  Enter Result
+                </Button>
+              )}
             </div>
           )}
         </div>
@@ -302,6 +312,36 @@ export function ThirdPlaceMatch({
           onSubmit={(_, winnerId) => {
             onRecordResult(winnerId);
             setShowResultModal(false);
+          }}
+        />
+      )}
+
+      {/* Character Select Modal */}
+      {showCharacterSelect && bracket.thirdPlace.gameType === 'smash' && (
+        <SmashCharacterSelectModal
+          isOpen={true}
+          onClose={() => setShowCharacterSelect(false)}
+          match={{
+            id: '3rd-place',
+            roundNumber: 18,
+            gameType: 'smash',
+            player1Id: bracket.thirdPlace.player1Id!,
+            player2Id: bracket.thirdPlace.player2Id!,
+            winnerId: null,
+            isDominant: false,
+            isSyncRound: false,
+            isPlayoff: true,
+            playoffRound: 'thirdPlace',
+            underservedPlayerId: null,
+            volunteerId: null,
+          }}
+          player1={player1}
+          player2={player2}
+          player1Standing={player1Seed}
+          player2Standing={player2Seed}
+          onConfirm={(_, player1Char, player2Char) => {
+            onSetCharacters(player1Char, player2Char);
+            setShowCharacterSelect(false);
           }}
         />
       )}

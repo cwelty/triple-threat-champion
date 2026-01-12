@@ -327,13 +327,14 @@ export function RulesModal({ isOpen, onClose }: RulesModalProps) {
               <div className="bg-gray-800 rounded-lg p-4">
                 <h4 className="font-semibold text-white mb-2">Swiss Pairing System</h4>
                 <p className="text-sm mb-2">
-                  Players are paired based on their game-specific records to ensure fair matchups:
+                  Players are paired using a smart matchmaking algorithm:
                 </p>
                 <ul className="list-disc list-inside space-y-1 text-sm">
-                  <li>Players with similar records face each other</li>
-                  <li>No rematches in the same game type when possible</li>
-                  <li>Each player targets 3 matches per game type (~9 total)</li>
-                  <li>Players with fewer matches get priority</li>
+                  <li><span className="text-yellow-400">Skill matching:</span> Players with similar records face each other (avoids 2-0 vs 0-0)</li>
+                  <li><span className="text-yellow-400">Station rotation:</span> Players don't stay at the same game multiple rounds in a row</li>
+                  <li><span className="text-yellow-400">No rematches:</span> Can't face same opponent twice in the same game</li>
+                  <li><span className="text-yellow-400">Balance:</span> Each player targets 3 matches per game (~9 total)</li>
+                  <li><span className="text-yellow-400">First meetings:</span> Prioritizes matchups between players who haven't faced each other</li>
                 </ul>
               </div>
 
@@ -503,6 +504,18 @@ export function RulesModal({ isOpen, onClose }: RulesModalProps) {
               </div>
 
               <div className="bg-gray-800 rounded-lg p-4">
+                <h4 className="font-semibold text-white mb-2">3rd Place Match (Optional)</h4>
+                <p className="text-sm mb-2">
+                  The two semifinal losers can compete for 3rd place:
+                </p>
+                <ul className="list-disc list-inside space-y-1 text-sm">
+                  <li>Players mutually agree on the game type</li>
+                  <li>Winner takes 3rd place, loser gets 4th</li>
+                  <li>Can be <span className="text-yellow-400">skipped</span> - 3rd/4th determined by total points instead</li>
+                </ul>
+              </div>
+
+              <div className="bg-gray-800 rounded-lg p-4">
                 <h4 className="font-semibold text-white mb-2">Finals - Best of 3</h4>
                 <p className="text-sm mb-2">
                   The two semifinal winners compete in a best-of-3 finals:
@@ -513,6 +526,15 @@ export function RulesModal({ isOpen, onClose }: RulesModalProps) {
                   <li>Higher seed picks Game 3 (if needed)</li>
                   <li>First to 2 wins becomes the Triple Threat Champion!</li>
                 </ul>
+              </div>
+
+              <div className="bg-gray-800 rounded-lg p-4">
+                <h4 className="font-semibold text-white mb-2">Playoff Betting</h4>
+                <p className="text-sm">
+                  Spectators (players not competing in the current playoff match) can place bets
+                  on match outcomes. Same rules apply: <span className="text-green-400">+1</span> for
+                  correct, <span className="text-red-400">-1</span> for wrong.
+                </p>
               </div>
             </div>
           )}
@@ -597,6 +619,19 @@ export function RulesModal({ isOpen, onClose }: RulesModalProps) {
                   <li><span className="text-white">9 players (14 rounds):</span> Rounds 4, 8, 13</li>
                   <li><span className="text-white">10 players (15 rounds):</span> Rounds 5, 9, 14</li>
                   <li><span className="text-white">11 players (17 rounds):</span> Rounds 5, 10, 15</li>
+                </ul>
+              </div>
+
+              <div className="bg-purple-900/30 border border-purple-600 rounded-lg p-4">
+                <h4 className="font-semibold text-purple-400 mb-2">The Foreshadower</h4>
+                <p className="text-sm text-purple-200 mb-2">
+                  When a player correctly predicts <span className="text-yellow-400">5 bets in a row</span>,
+                  they become "The Foreshadower" and gain a special power:
+                </p>
+                <ul className="list-disc list-inside space-y-1 text-sm text-purple-200">
+                  <li>Choose <span className="text-red-400">any player</span> to take a penalty shot</li>
+                  <li>The streak resets after using this power</li>
+                  <li>A wrong bet resets the streak</li>
                 </ul>
               </div>
 

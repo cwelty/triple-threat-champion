@@ -9,6 +9,7 @@ import type {
   TournamentPhase,
   GameType,
   PlayoffBracket,
+  Foreshadower,
 } from '../types';
 import { generateSwissPairings, type MatchmakingLog } from '../utils/swissPairing';
 import { calculateAllBuchholz } from '../utils/buchholz';
@@ -49,6 +50,7 @@ function createEmptyPlayer(id: string, name: string, nickname: string, avatar: s
     betsWon: 0,
     betsLost: 0,
     bettingProfit: 0,
+    bettingStreak: 0,
     betsReceived: 0,
     buchholzScore: 0,
     smashBuchholz: 0,
@@ -104,12 +106,15 @@ interface TournamentStore extends TournamentState {
   revealChampions: () => void;
   setupPlayoffs: () => void;
   selectSemifinalGame: (semifinalNumber: 1 | 2, gameType: GameType) => void;
+  setSemifinalCharacters: (semifinalNumber: 1 | 2, player1Character: string, player2Character: string) => void;
   recordSemifinalResult: (semifinalNumber: 1 | 2, winnerId: string) => void;
   setupThirdPlaceMatch: () => void;
   selectThirdPlaceGame: (gameType: GameType) => void;
+  setThirdPlaceCharacters: (player1Character: string, player2Character: string) => void;
   recordThirdPlaceResult: (winnerId: string) => void;
   skipThirdPlaceMatch: () => void;
   selectFinalsGame: (gameNumber: number, gameType: GameType) => void;
+  setFinalsGameCharacters: (player1Character: string, player2Character: string) => void;
   recordFinalsResult: (winnerId: string, isDominant: boolean) => void;
   placePlayoffBet: (bettorId: string, matchKey: string, predictedWinnerId: string) => void;
   removePlayoffBet: (bettorId: string, matchKey: string) => void;
@@ -118,6 +123,11 @@ interface TournamentStore extends TournamentState {
 
   // Playoff betting state
   playoffBets: Bet[];
+
+  // Foreshadower state (players with 3+ consecutive successful bets)
+  pendingForeshadowers: Foreshadower[];
+  assignForeshadowerTarget: (foreshadowerId: string, targetId: string) => void;
+  clearForeshadowers: () => void;
 
   // Matchmaking logs
   matchmakingLogs: MatchmakingLog[];
@@ -142,6 +152,7 @@ export const useTournamentStore = create<TournamentStore>()(
       rounds: [],
       playoffBracket: createEmptyPlayoffBracket(),
       playoffBets: [],
+      pendingForeshadowers: [],
       matchmakingLogs: [],
       smashChampionId: null,
       chessChampionId: null,
@@ -476,6 +487,8 @@ export const useTournamentStore = create<TournamentStore>()(
 
           // Process bets for this match
           const bets = round.bets.filter((b) => b.matchId === matchId);
+          const newForeshadowers: Foreshadower[] = [];
+
           for (const bet of bets) {
             const isCorrect = bet.predictedWinnerId === winnerId;
             const betIndex = rounds[currentRoundIndex].bets.findIndex((b) => b.id === bet.id);
@@ -486,6 +499,9 @@ export const useTournamentStore = create<TournamentStore>()(
             const bettorIndex = players.findIndex((p) => p.id === bet.bettorId);
             if (bettorIndex >= 0) {
               const bettor = players[bettorIndex];
+              // Update streak: increment if correct, reset if incorrect
+              const newStreak = isCorrect ? bettor.bettingStreak + 1 : 0;
+
               players[bettorIndex] = {
                 ...bettor,
                 betsPlaced: bettor.betsPlaced + 1,
@@ -493,7 +509,22 @@ export const useTournamentStore = create<TournamentStore>()(
                 betsLost: bettor.betsLost + (isCorrect ? 0 : 1),
                 bettingProfit: bettor.bettingProfit + (isCorrect ? 1 : -1),
                 totalPoints: bettor.totalPoints + (isCorrect ? 1 : -1),
+                bettingStreak: newStreak,
               };
+
+              // Check for Foreshadower (3+ consecutive wins)
+              // Only add if this player isn't already pending as a foreshadower
+              if (newStreak === 5) {
+                const alreadyPending = state.pendingForeshadowers.some(f => f.playerId === bet.bettorId);
+                const alreadyInNew = newForeshadowers.some(f => f.playerId === bet.bettorId);
+                if (!alreadyPending && !alreadyInNew) {
+                  newForeshadowers.push({
+                    playerId: bet.bettorId,
+                    streakCount: newStreak,
+                    targetPlayerId: null,
+                  });
+                }
+              }
             }
 
             // Track bets received (fan favorite)
@@ -504,6 +535,15 @@ export const useTournamentStore = create<TournamentStore>()(
                 betsReceived: players[predictedPlayerIndex].betsReceived + 1,
               };
             }
+          }
+
+          // Add any new foreshadowers to pending list
+          if (newForeshadowers.length > 0) {
+            return {
+              rounds,
+              players,
+              pendingForeshadowers: [...state.pendingForeshadowers, ...newForeshadowers],
+            };
           }
 
           return { rounds, players };
@@ -956,6 +996,8 @@ export const useTournamentStore = create<TournamentStore>()(
 
           // Process bets (only affect underserved player's outcome)
           const bets = rounds[syncRoundIndex].bets.filter((b) => b.matchId === matchId);
+          const newForeshadowers: Foreshadower[] = [];
+
           for (const bet of bets) {
             // Bet is correct if predicted winner matches and underserved player was predicted
             const isCorrect = bet.predictedWinnerId === winnerId;
@@ -967,6 +1009,9 @@ export const useTournamentStore = create<TournamentStore>()(
             const bettorIndex = players.findIndex((p) => p.id === bet.bettorId);
             if (bettorIndex >= 0) {
               const bettor = players[bettorIndex];
+              // Update streak: increment if correct, reset if incorrect
+              const newStreak = isCorrect ? bettor.bettingStreak + 1 : 0;
+
               players[bettorIndex] = {
                 ...bettor,
                 betsPlaced: bettor.betsPlaced + 1,
@@ -974,7 +1019,22 @@ export const useTournamentStore = create<TournamentStore>()(
                 betsLost: bettor.betsLost + (isCorrect ? 0 : 1),
                 bettingProfit: bettor.bettingProfit + (isCorrect ? 1 : -1),
                 totalPoints: bettor.totalPoints + (isCorrect ? 1 : -1),
+                bettingStreak: newStreak,
               };
+
+              // Check for Foreshadower (3+ consecutive wins)
+              // Only add if this player isn't already pending as a foreshadower
+              if (newStreak === 5) {
+                const alreadyPending = state.pendingForeshadowers.some(f => f.playerId === bet.bettorId);
+                const alreadyInNew = newForeshadowers.some(f => f.playerId === bet.bettorId);
+                if (!alreadyPending && !alreadyInNew) {
+                  newForeshadowers.push({
+                    playerId: bet.bettorId,
+                    streakCount: newStreak,
+                    targetPlayerId: null,
+                  });
+                }
+              }
             }
 
             // Track bets received (fan favorite)
@@ -985,6 +1045,15 @@ export const useTournamentStore = create<TournamentStore>()(
                 betsReceived: players[predictedPlayerIndex].betsReceived + 1,
               };
             }
+          }
+
+          // Add any new foreshadowers to pending list
+          if (newForeshadowers.length > 0) {
+            return {
+              rounds,
+              players,
+              pendingForeshadowers: [...state.pendingForeshadowers, ...newForeshadowers],
+            };
           }
 
           return { rounds, players };
@@ -1117,6 +1186,19 @@ export const useTournamentStore = create<TournamentStore>()(
         }));
       },
 
+      setSemifinalCharacters: (semifinalNumber, player1Character, player2Character) => {
+        set((state) => ({
+          playoffBracket: {
+            ...state.playoffBracket,
+            [`semifinal${semifinalNumber}`]: {
+              ...state.playoffBracket[`semifinal${semifinalNumber}`],
+              player1Character,
+              player2Character,
+            },
+          },
+        }));
+      },
+
       recordSemifinalResult: (semifinalNumber, winnerId) => {
         set((state) => {
           const playoffBracket = { ...state.playoffBracket };
@@ -1126,18 +1208,38 @@ export const useTournamentStore = create<TournamentStore>()(
           // Process playoff bets for this semifinal
           const matchKey = `sf${semifinalNumber}`;
           const players = [...state.players];
+          const newForeshadowers: Foreshadower[] = [];
+
           const playoffBets = state.playoffBets.map((bet) => {
             if (bet.matchId === matchKey && bet.isCorrect === null) {
               const isCorrect = bet.predictedWinnerId === winnerId;
               // Update bettor stats
               const bettorIdx = players.findIndex((p) => p.id === bet.bettorId);
               if (bettorIdx >= 0) {
+                const bettor = players[bettorIdx];
+                const newStreak = isCorrect ? bettor.bettingStreak + 1 : 0;
+
                 players[bettorIdx] = {
-                  ...players[bettorIdx],
-                  betsWon: players[bettorIdx].betsWon + (isCorrect ? 1 : 0),
-                  betsLost: players[bettorIdx].betsLost + (isCorrect ? 0 : 1),
-                  bettingProfit: players[bettorIdx].bettingProfit + (isCorrect ? 1 : -1),
+                  ...bettor,
+                  betsWon: bettor.betsWon + (isCorrect ? 1 : 0),
+                  betsLost: bettor.betsLost + (isCorrect ? 0 : 1),
+                  bettingProfit: bettor.bettingProfit + (isCorrect ? 1 : -1),
+                  bettingStreak: newStreak,
                 };
+
+                // Check for Foreshadower
+                // Only add if this player isn't already pending as a foreshadower
+                if (newStreak === 5) {
+                  const alreadyPending = state.pendingForeshadowers.some(f => f.playerId === bet.bettorId);
+                  const alreadyInNew = newForeshadowers.some(f => f.playerId === bet.bettorId);
+                  if (!alreadyPending && !alreadyInNew) {
+                    newForeshadowers.push({
+                      playerId: bet.bettorId,
+                      streakCount: newStreak,
+                      targetPlayerId: null,
+                    });
+                  }
+                }
               }
               return { ...bet, isCorrect };
             }
@@ -1170,10 +1272,21 @@ export const useTournamentStore = create<TournamentStore>()(
               player2Wins: 0,
               games: [],
             };
-            return { playoffBracket, players, playoffBets, phase: 'thirdPlace' as TournamentPhase };
+            return {
+              playoffBracket,
+              players,
+              playoffBets,
+              phase: 'thirdPlace' as TournamentPhase,
+              pendingForeshadowers: [...state.pendingForeshadowers, ...newForeshadowers],
+            };
           }
 
-          return { playoffBracket, players, playoffBets };
+          return {
+            playoffBracket,
+            players,
+            playoffBets,
+            pendingForeshadowers: [...state.pendingForeshadowers, ...newForeshadowers],
+          };
         });
       },
 
@@ -1193,6 +1306,19 @@ export const useTournamentStore = create<TournamentStore>()(
         }));
       },
 
+      setThirdPlaceCharacters: (player1Character, player2Character) => {
+        set((state) => ({
+          playoffBracket: {
+            ...state.playoffBracket,
+            thirdPlace: {
+              ...state.playoffBracket.thirdPlace,
+              player1Character,
+              player2Character,
+            },
+          },
+        }));
+      },
+
       recordThirdPlaceResult: (winnerId) => {
         set((state) => {
           const playoffBracket = { ...state.playoffBracket };
@@ -1201,24 +1327,50 @@ export const useTournamentStore = create<TournamentStore>()(
           // Process playoff bets for 3rd place match
           const matchKey = '3rd';
           const players = [...state.players];
+          const newForeshadowers: Foreshadower[] = [];
+
           const playoffBets = state.playoffBets.map((bet) => {
             if (bet.matchId === matchKey && bet.isCorrect === null) {
               const isCorrect = bet.predictedWinnerId === winnerId;
               const bettorIdx = players.findIndex((p) => p.id === bet.bettorId);
               if (bettorIdx >= 0) {
+                const bettor = players[bettorIdx];
+                const newStreak = isCorrect ? bettor.bettingStreak + 1 : 0;
+
                 players[bettorIdx] = {
-                  ...players[bettorIdx],
-                  betsWon: players[bettorIdx].betsWon + (isCorrect ? 1 : 0),
-                  betsLost: players[bettorIdx].betsLost + (isCorrect ? 0 : 1),
-                  bettingProfit: players[bettorIdx].bettingProfit + (isCorrect ? 1 : -1),
+                  ...bettor,
+                  betsWon: bettor.betsWon + (isCorrect ? 1 : 0),
+                  betsLost: bettor.betsLost + (isCorrect ? 0 : 1),
+                  bettingProfit: bettor.bettingProfit + (isCorrect ? 1 : -1),
+                  bettingStreak: newStreak,
                 };
+
+                // Check for Foreshadower
+                // Only add if this player isn't already pending as a foreshadower
+                if (newStreak === 5) {
+                  const alreadyPending = state.pendingForeshadowers.some(f => f.playerId === bet.bettorId);
+                  const alreadyInNew = newForeshadowers.some(f => f.playerId === bet.bettorId);
+                  if (!alreadyPending && !alreadyInNew) {
+                    newForeshadowers.push({
+                      playerId: bet.bettorId,
+                      streakCount: newStreak,
+                      targetPlayerId: null,
+                    });
+                  }
+                }
               }
               return { ...bet, isCorrect };
             }
             return bet;
           });
 
-          return { playoffBracket, players, playoffBets, phase: 'finals' as TournamentPhase };
+          return {
+            playoffBracket,
+            players,
+            playoffBets,
+            phase: 'finals' as TournamentPhase,
+            pendingForeshadowers: [...state.pendingForeshadowers, ...newForeshadowers],
+          };
         });
       },
 
@@ -1265,6 +1417,29 @@ export const useTournamentStore = create<TournamentStore>()(
         });
       },
 
+      setFinalsGameCharacters: (player1Character, player2Character) => {
+        set((state) => {
+          const games = [...state.playoffBracket.finals.games];
+          const lastGameIndex = games.length - 1;
+          if (lastGameIndex >= 0) {
+            games[lastGameIndex] = {
+              ...games[lastGameIndex],
+              player1Character,
+              player2Character,
+            };
+          }
+          return {
+            playoffBracket: {
+              ...state.playoffBracket,
+              finals: {
+                ...state.playoffBracket.finals,
+                games,
+              },
+            },
+          };
+        });
+      },
+
       recordFinalsResult: (winnerId, isDominant) => {
         set((state) => {
           const playoffBracket = { ...state.playoffBracket };
@@ -1280,18 +1455,38 @@ export const useTournamentStore = create<TournamentStore>()(
           // Process playoff bets for this finals game
           const matchKey = `finals-${games.length}`;
           const players = [...state.players];
+          const newForeshadowers: Foreshadower[] = [];
+
           const playoffBets = state.playoffBets.map((bet) => {
             if (bet.matchId === matchKey && bet.isCorrect === null) {
               const isCorrect = bet.predictedWinnerId === winnerId;
               // Update bettor stats
               const bettorIdx = players.findIndex((p) => p.id === bet.bettorId);
               if (bettorIdx >= 0) {
+                const bettor = players[bettorIdx];
+                const newStreak = isCorrect ? bettor.bettingStreak + 1 : 0;
+
                 players[bettorIdx] = {
-                  ...players[bettorIdx],
-                  betsWon: players[bettorIdx].betsWon + (isCorrect ? 1 : 0),
-                  betsLost: players[bettorIdx].betsLost + (isCorrect ? 0 : 1),
-                  bettingProfit: players[bettorIdx].bettingProfit + (isCorrect ? 1 : -1),
+                  ...bettor,
+                  betsWon: bettor.betsWon + (isCorrect ? 1 : 0),
+                  betsLost: bettor.betsLost + (isCorrect ? 0 : 1),
+                  bettingProfit: bettor.bettingProfit + (isCorrect ? 1 : -1),
+                  bettingStreak: newStreak,
                 };
+
+                // Check for Foreshadower
+                // Only add if this player isn't already pending as a foreshadower
+                if (newStreak === 5) {
+                  const alreadyPending = state.pendingForeshadowers.some(f => f.playerId === bet.bettorId);
+                  const alreadyInNew = newForeshadowers.some(f => f.playerId === bet.bettorId);
+                  if (!alreadyPending && !alreadyInNew) {
+                    newForeshadowers.push({
+                      playerId: bet.bettorId,
+                      streakCount: newStreak,
+                      targetPlayerId: null,
+                    });
+                  }
+                }
               }
               return { ...bet, isCorrect };
             }
@@ -1320,7 +1515,14 @@ export const useTournamentStore = create<TournamentStore>()(
             newPhase = 'complete';
           }
 
-          return { playoffBracket, players, playoffBets, tripleThreatchampionId, phase: newPhase };
+          return {
+            playoffBracket,
+            players,
+            playoffBets,
+            tripleThreatchampionId,
+            phase: newPhase,
+            pendingForeshadowers: [...state.pendingForeshadowers, ...newForeshadowers],
+          };
         });
       },
 
@@ -1505,6 +1707,7 @@ export const useTournamentStore = create<TournamentStore>()(
           rounds: [],
           playoffBracket: createEmptyPlayoffBracket(),
           playoffBets: [],
+          pendingForeshadowers: [],
           matchmakingLogs: [],
           smashChampionId: null,
           chessChampionId: null,
@@ -1512,6 +1715,19 @@ export const useTournamentStore = create<TournamentStore>()(
           bestGamblerId: null,
           tripleThreatchampionId: null,
         });
+      },
+
+      // Foreshadower actions
+      assignForeshadowerTarget: (foreshadowerId, targetId) => {
+        set((state) => ({
+          pendingForeshadowers: state.pendingForeshadowers.map((f) =>
+            f.playerId === foreshadowerId ? { ...f, targetPlayerId: targetId } : f
+          ),
+        }));
+      },
+
+      clearForeshadowers: () => {
+        set({ pendingForeshadowers: [] });
       },
     }),
     {

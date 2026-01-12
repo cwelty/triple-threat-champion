@@ -31,6 +31,7 @@ import { FinalResults } from './components/awards/FinalResults';
 
 // Drinking
 import { DrinkingAnnouncement } from './components/drinking/DrinkingAnnouncement';
+import { ForeshadowerAnnouncement } from './components/drinking/ForeshadowerAnnouncement';
 
 // Rules
 import { RulesModal } from './components/rules/RulesModal';
@@ -59,6 +60,7 @@ function App() {
   const [showBestGamblerReveal, setShowBestGamblerReveal] = useState(true);
   const [bestGamblerRevealed, setBestGamblerRevealed] = useState(false);
   const [showMatchmakingLog, setShowMatchmakingLog] = useState(false);
+  const [currentForeshadowerIndex, setCurrentForeshadowerIndex] = useState(0);
 
   // Champion reveal flow states
   const [championRevealStage, setChampionRevealStage] = useState<'none' | 'intro' | 'countdown' | 'reveal' | 'fadeOut' | 'done'>('none');
@@ -100,11 +102,14 @@ function App() {
     revealChampions,
     setupPlayoffs,
     selectSemifinalGame,
+    setSemifinalCharacters,
     recordSemifinalResult,
     selectThirdPlaceGame,
+    setThirdPlaceCharacters,
     recordThirdPlaceResult,
     skipThirdPlaceMatch,
     selectFinalsGame,
+    setFinalsGameCharacters,
     recordFinalsResult,
     awardBestGambler,
     getPlayer,
@@ -117,6 +122,9 @@ function App() {
     placePlayoffBet,
     removePlayoffBet,
     matchmakingLogs,
+    pendingForeshadowers,
+    assignForeshadowerTarget,
+    clearForeshadowers,
   } = useTournamentStore();
 
   // Calculate drinking announcement rounds (roughly at 30%, 60%, 90% of total)
@@ -655,6 +663,8 @@ function App() {
             playoffBets={playoffBets}
             onPlacePlayoffBet={placePlayoffBet}
             onRemovePlayoffBet={removePlayoffBet}
+            onSetSemifinalCharacters={setSemifinalCharacters}
+            onSetFinalsGameCharacters={setFinalsGameCharacters}
           />
         )}
 
@@ -664,6 +674,7 @@ function App() {
             bracket={playoffBracket}
             players={players}
             onSelectGame={selectThirdPlaceGame}
+            onSetCharacters={setThirdPlaceCharacters}
             onRecordResult={recordThirdPlaceResult}
             onSkip={skipThirdPlaceMatch}
             playoffBets={playoffBets}
@@ -687,6 +698,8 @@ function App() {
             playoffBets={playoffBets}
             onPlacePlayoffBet={placePlayoffBet}
             onRemovePlayoffBet={removePlayoffBet}
+            onSetSemifinalCharacters={setSemifinalCharacters}
+            onSetFinalsGameCharacters={setFinalsGameCharacters}
           />
         )}
 
@@ -781,6 +794,33 @@ function App() {
           }}
         />
       )}
+
+      {/* Foreshadower Announcement */}
+      {pendingForeshadowers.length > 0 && currentForeshadowerIndex < pendingForeshadowers.length && (() => {
+        const currentForeshadower = pendingForeshadowers[currentForeshadowerIndex];
+        const foreshadowerPlayer = players.find(p => p.id === currentForeshadower.playerId);
+
+        if (!foreshadowerPlayer) return null;
+
+        return (
+          <ForeshadowerAnnouncement
+            foreshadower={currentForeshadower}
+            foreshadowerPlayer={foreshadowerPlayer}
+            players={players}
+            onSelectTarget={assignForeshadowerTarget}
+            onComplete={() => {
+              // Move to next foreshadower or clear all
+              if (currentForeshadowerIndex < pendingForeshadowers.length - 1) {
+                setCurrentForeshadowerIndex(currentForeshadowerIndex + 1);
+              } else {
+                // All foreshadowers handled, clear the list
+                clearForeshadowers();
+                setCurrentForeshadowerIndex(0);
+              }
+            }}
+          />
+        );
+      })()}
 
       {/* Reset Confirmation Modal */}
       <Modal

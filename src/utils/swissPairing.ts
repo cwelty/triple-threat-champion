@@ -111,6 +111,7 @@ interface ScoredPair {
   recordDiff: number;
   scarcity: number; // How few options the players have (higher = more urgent to match)
   isLastChance: boolean; // True if this is the last game type where these players can meet
+  stationStickiness: number; // How many of the two players played this same game last round (0, 1, or 2)
 }
 
 // Count how many valid opponents a player has left in this game
@@ -124,6 +125,16 @@ function countRemainingOptions(
     c?.player?.id !== player.player.id &&
     canMatch(player.player, c.player, gameType)
   ).length;
+}
+
+// Get the game type a player played in their most recent match
+function getLastGamePlayed(player: Player, previousMatches: Match[]): GameType | null {
+  // Find the most recent match this player was in
+  const playerMatches = previousMatches
+    .filter(m => m.player1Id === player.id || m.player2Id === player.id)
+    .sort((a, b) => b.roundNumber - a.roundNumber);
+
+  return playerMatches.length > 0 ? playerMatches[0].gameType : null;
 }
 
 // Check if this game type is the last opportunity for two players to meet
@@ -157,7 +168,8 @@ function isLastChanceToMeet(p1: Player, p2: Player, currentGame: GameType): bool
 
 function findPairForGame(
   candidates: PairingCandidate[],
-  gameType: GameType
+  gameType: GameType,
+  previousMatches: Match[]
 ): PairingResult | null {
   if (!candidates || candidates.length < 2) return null;
 
@@ -187,6 +199,13 @@ function findPairForGame(
         // Check if this is the last chance for these players to meet
         const isLastChance = isLastChanceToMeet(sorted[i].player, sorted[j].player, gameType);
 
+        // Calculate station stickiness: how many of these players played this same game last round?
+        const p1LastGame = getLastGamePlayed(sorted[i].player, previousMatches);
+        const p2LastGame = getLastGamePlayed(sorted[j].player, previousMatches);
+        let stationStickiness = 0;
+        if (p1LastGame === gameType) stationStickiness++;
+        if (p2LastGame === gameType) stationStickiness++;
+
         validPairs.push({
           p1: sorted[i],
           p2: sorted[j],
@@ -194,6 +213,7 @@ function findPairForGame(
           recordDiff,
           scarcity,
           isLastChance,
+          stationStickiness,
         });
       }
     }
@@ -206,42 +226,58 @@ function findPairForGame(
 
   // Sort pairs with multiple priorities:
   // 1. Last chance pairings (players who haven't met and this is their only remaining opportunity)
-  // 2. First-time matchups (crossGameEncounters === 0)
-  // 3. Critical scarcity (≤2 options left)
-  // 4. Fewer cross-game encounters
-  // 5. Higher scarcity (as tiebreaker)
-  // 6. Skill level difference
+  // 2. Critical scarcity (≤2 options left)
+  // 3. Avoid large skill mismatches (recordDiff >= 2 is heavily penalized)
+  // 4. Station stickiness (prefer players who weren't at this station last round)
+  // 5. First-time matchups with similar skill (crossGameEncounters === 0 AND recordDiff <= 1)
+  // 6. Fewer cross-game encounters
+  // 7. Higher scarcity (as tiebreaker)
+  // 8. Skill level difference (fine-tuning)
   validPairs.sort((a, b) => {
     // Primary: Last chance pairings - MUST happen or players will never meet
     if (a.isLastChance !== b.isLastChance) {
       return a.isLastChance ? -1 : 1;
     }
 
-    // Secondary: First-time matchups (never played in any game)
-    const aFirstTime = a.crossGameEncounters === 0;
-    const bFirstTime = b.crossGameEncounters === 0;
-    if (aFirstTime !== bFirstTime) {
-      return aFirstTime ? -1 : 1;
-    }
-
-    // Tertiary: Critical scarcity (player has ≤2 options left)
+    // Secondary: Critical scarcity (player has ≤2 options left)
     const aCritical = a.scarcity >= 8;
     const bCritical = b.scarcity >= 8;
     if (aCritical !== bCritical) {
       return aCritical ? -1 : 1;
     }
 
-    // Quaternary: Fewer cross-game encounters
+    // Tertiary: Avoid large skill mismatches - recordDiff >= 2 is a significant penalty
+    // A 2-0 player should not face a 0-0 player in the same game
+    const aLargeMismatch = a.recordDiff >= 2;
+    const bLargeMismatch = b.recordDiff >= 2;
+    if (aLargeMismatch !== bLargeMismatch) {
+      return aLargeMismatch ? 1 : -1; // Prefer the one WITHOUT large mismatch
+    }
+
+    // Quaternary: Station stickiness - prefer pairs where neither player was here last round
+    // This prevents players from getting "stuck" at the same game station
+    if (a.stationStickiness !== b.stationStickiness) {
+      return a.stationStickiness - b.stationStickiness; // Lower stickiness is better
+    }
+
+    // Quinary: First-time matchups with reasonable skill gap
+    const aGoodFirstTime = a.crossGameEncounters === 0 && a.recordDiff <= 1;
+    const bGoodFirstTime = b.crossGameEncounters === 0 && b.recordDiff <= 1;
+    if (aGoodFirstTime !== bGoodFirstTime) {
+      return aGoodFirstTime ? -1 : 1;
+    }
+
+    // Senary: Fewer cross-game encounters
     if (a.crossGameEncounters !== b.crossGameEncounters) {
       return a.crossGameEncounters - b.crossGameEncounters;
     }
 
-    // Quinary: Higher scarcity as tiebreaker
+    // Septenary: Higher scarcity as tiebreaker
     if (a.scarcity !== b.scarcity) {
       return b.scarcity - a.scarcity;
     }
 
-    // Senary: Closest skill level
+    // Octonary: Closest skill level
     return a.recordDiff - b.recordDiff;
   });
 
@@ -250,7 +286,10 @@ function findPairForGame(
   const record2 = bestPair.p2.gameRecord.wins - bestPair.p2.gameRecord.losses;
 
   let reason: string;
-  if (bestPair.crossGameEncounters === 0) {
+  if (bestPair.crossGameEncounters === 0 && bestPair.recordDiff <= 1) {
+    reason = 'First-time matchup (similar skill)';
+    details.push(`Players have never faced each other in any game`);
+  } else if (bestPair.crossGameEncounters === 0) {
     reason = 'First-time matchup';
     details.push(`Players have never faced each other in any game`);
   } else if (bestPair.crossGameEncounters < 3) {
@@ -265,6 +304,10 @@ function findPairForGame(
     details.push(`Same record group (${record1 >= 0 ? '+' : ''}${record1})`);
   } else {
     details.push(`Record difference: ${record1 >= 0 ? '+' : ''}${record1} vs ${record2 >= 0 ? '+' : ''}${record2}`);
+  }
+
+  if (bestPair.stationStickiness > 0) {
+    details.push(`Station stickiness: ${bestPair.stationStickiness} player(s) were here last round`);
   }
 
   return { pair: [bestPair.p1, bestPair.p2], reason, details };
@@ -310,7 +353,7 @@ export function generateSwissPairings(
 
   for (const gameType of shuffledGames) {
     const candidates = getEligiblePlayers(players, gameType, assignedPlayerIds);
-    const result = findPairForGame(candidates, gameType);
+    const result = findPairForGame(candidates, gameType, previousMatches);
 
     if (result) {
       const { pair, reason, details } = result;

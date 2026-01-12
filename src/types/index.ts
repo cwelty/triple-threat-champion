@@ -42,6 +42,7 @@ export interface Player {
   betsWon: number;
   betsLost: number;
   bettingProfit: number;
+  bettingStreak: number; // Current consecutive successful bets (resets on loss)
   betsReceived: number; // Fan favorite - how many bets placed ON this player
   buchholzScore: number;
   smashBuchholz: number;
@@ -102,12 +103,16 @@ export interface PlayoffBracket {
     player2Id: string | null;
     winnerId: string | null;
     gameType: GameType | null;
+    player1Character?: string;
+    player2Character?: string;
   };
   semifinal2: {
     player1Id: string | null;
     player2Id: string | null;
     winnerId: string | null;
     gameType: GameType | null;
+    player1Character?: string;
+    player2Character?: string;
   };
   thirdPlace: {
     player1Id: string | null;
@@ -115,6 +120,8 @@ export interface PlayoffBracket {
     winnerId: string | null;
     gameType: GameType | null;
     skipped: boolean;
+    player1Character?: string;
+    player2Character?: string;
   };
   finals: {
     player1Id: string | null;
@@ -154,3 +161,10 @@ export const GAME_NAMES: Record<GameType, string> = {
   chess: 'Speed Chess',
   pingPong: 'Ping-Pong',
 };
+
+// Foreshadower - player with 3+ consecutive successful bets
+export interface Foreshadower {
+  playerId: string;
+  streakCount: number;
+  targetPlayerId: string | null; // Who they chose to drink
+}

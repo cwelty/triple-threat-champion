@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import type { Player, PlayoffBracket as BracketType, GameType, Bet } from '../../types';
+import type { Player, PlayoffBracket as BracketType, GameType, Bet, Match } from '../../types';
 import { GAME_ICONS, GAME_NAMES } from '../../types';
 import { getAvatarEmoji } from '../../data/avatars';
 import { Button } from '../ui/Button';
 import { GamePicker } from './GamePicker';
 import { ResultEntryModal } from '../round/ResultEntryModal';
+import { SmashCharacterSelectModal } from '../round/SmashCharacterSelectModal';
 
 interface PlayoffBracketProps {
   bracket: BracketType;
@@ -17,6 +18,8 @@ interface PlayoffBracketProps {
   playoffBets: Bet[];
   onPlacePlayoffBet: (bettorId: string, matchKey: string, predictedWinnerId: string) => void;
   onRemovePlayoffBet: (bettorId: string, matchKey: string) => void;
+  onSetSemifinalCharacters: (semifinalNumber: 1 | 2, player1Character: string, player2Character: string) => void;
+  onSetFinalsGameCharacters: (player1Character: string, player2Character: string) => void;
 }
 
 export function PlayoffBracket({
@@ -30,10 +33,14 @@ export function PlayoffBracket({
   playoffBets,
   onPlacePlayoffBet,
   onRemovePlayoffBet,
+  onSetSemifinalCharacters,
+  onSetFinalsGameCharacters,
 }: PlayoffBracketProps) {
   const [activeSemifinal, setActiveSemifinal] = useState<1 | 2 | null>(null);
   const [finalsResultModal, setFinalsResultModal] = useState(false);
   const [showBettingPanel, setShowBettingPanel] = useState(false);
+  const [characterSelectSemifinal, setCharacterSelectSemifinal] = useState<1 | 2 | null>(null);
+  const [showFinalsCharacterSelect, setShowFinalsCharacterSelect] = useState(false);
 
   const getPlayer = (id: string | null) => id ? players.find((p) => p.id === id) : undefined;
 
@@ -189,9 +196,15 @@ export function PlayoffBracket({
                         </span>
                       </div>
                     </div>
-                    <Button variant="primary" size="lg" className="w-full" onClick={() => setActiveSemifinal(1)}>
-                      Enter Result
-                    </Button>
+                    {bracket.semifinal1.gameType === 'smash' && !bracket.semifinal1.player1Character ? (
+                      <Button variant="secondary" size="lg" className="w-full" onClick={() => setCharacterSelectSemifinal(1)}>
+                        Select Characters
+                      </Button>
+                    ) : (
+                      <Button variant="primary" size="lg" className="w-full" onClick={() => setActiveSemifinal(1)}>
+                        Enter Result
+                      </Button>
+                    )}
                   </div>
                 )}
 
@@ -286,9 +299,15 @@ export function PlayoffBracket({
                         </span>
                       </div>
                     </div>
-                    <Button variant="primary" size="lg" className="w-full" onClick={() => setActiveSemifinal(2)}>
-                      Enter Result
-                    </Button>
+                    {bracket.semifinal2.gameType === 'smash' && !bracket.semifinal2.player1Character ? (
+                      <Button variant="secondary" size="lg" className="w-full" onClick={() => setCharacterSelectSemifinal(2)}>
+                        Select Characters
+                      </Button>
+                    ) : (
+                      <Button variant="primary" size="lg" className="w-full" onClick={() => setActiveSemifinal(2)}>
+                        Enter Result
+                      </Button>
+                    )}
                   </div>
                 )}
 
@@ -497,25 +516,35 @@ export function PlayoffBracket({
           )}
 
           {/* Enter Result for Current Game */}
-          {bracket.finals.games.length > 0 && !bracket.finals.games[bracket.finals.games.length - 1].winnerId && !finalsWinner && (
-            <div className="text-center">
-              <div className="inline-block px-6 py-3 bg-gradient-to-r from-purple-900/50 to-purple-800/50 rounded-xl border-2 border-purple-500 mb-4">
-                <div className="text-sm text-gray-400 uppercase tracking-wider mb-1">Now Playing - Game {bracket.finals.games.length}</div>
-                <div className="flex items-center justify-center gap-3">
-                  <span className="text-4xl">{GAME_ICONS[bracket.finals.games[bracket.finals.games.length - 1].gameType]}</span>
-                  <span className="text-2xl font-bold text-white uppercase"
-                        style={{ fontFamily: "'Russo One', sans-serif" }}>
-                    {GAME_NAMES[bracket.finals.games[bracket.finals.games.length - 1].gameType]}
-                  </span>
+          {bracket.finals.games.length > 0 && !bracket.finals.games[bracket.finals.games.length - 1].winnerId && !finalsWinner && (() => {
+            const currentGame = bracket.finals.games[bracket.finals.games.length - 1];
+            const needsCharacterSelect = currentGame.gameType === 'smash' && !currentGame.player1Character;
+            return (
+              <div className="text-center">
+                <div className="inline-block px-6 py-3 bg-gradient-to-r from-purple-900/50 to-purple-800/50 rounded-xl border-2 border-purple-500 mb-4">
+                  <div className="text-sm text-gray-400 uppercase tracking-wider mb-1">Now Playing - Game {bracket.finals.games.length}</div>
+                  <div className="flex items-center justify-center gap-3">
+                    <span className="text-4xl">{GAME_ICONS[currentGame.gameType]}</span>
+                    <span className="text-2xl font-bold text-white uppercase"
+                          style={{ fontFamily: "'Russo One', sans-serif" }}>
+                      {GAME_NAMES[currentGame.gameType]}
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  {needsCharacterSelect ? (
+                    <Button variant="secondary" size="lg" onClick={() => setShowFinalsCharacterSelect(true)}>
+                      Select Characters
+                    </Button>
+                  ) : (
+                    <Button variant="primary" size="lg" onClick={() => setFinalsResultModal(true)}>
+                      Enter Game {bracket.finals.games.length} Result
+                    </Button>
+                  )}
                 </div>
               </div>
-              <div>
-                <Button variant="primary" size="lg" onClick={() => setFinalsResultModal(true)}>
-                  Enter Game {bracket.finals.games.length} Result
-                </Button>
-              </div>
-            </div>
-          )}
+            );
+          })()}
         </>
       )}
 
@@ -866,6 +895,82 @@ export function PlayoffBracket({
           onSubmit={(_, winnerId, isDominant) => {
             onRecordFinalsResult(winnerId, isDominant);
             setFinalsResultModal(false);
+          }}
+        />
+      )}
+
+      {/* Semifinal Character Select Modals */}
+      {characterSelectSemifinal === 1 && bracket.semifinal1.gameType === 'smash' && (
+        <SmashCharacterSelectModal
+          isOpen={true}
+          onClose={() => setCharacterSelectSemifinal(null)}
+          match={{
+            id: 'sf1',
+            roundNumber: 18,
+            gameType: 'smash',
+            player1Id: bracket.semifinal1.player1Id!,
+            player2Id: bracket.semifinal1.player2Id!,
+            winnerId: null,
+            isDominant: false,
+            isSyncRound: false,
+            isPlayoff: true,
+            playoffRound: 'semifinal',
+            underservedPlayerId: null,
+            volunteerId: null,
+          }}
+          player1={semifinal1Player1}
+          player2={semifinal1Player2}
+          player1Standing={1}
+          player2Standing={4}
+          onConfirm={(_, player1Char, player2Char) => {
+            onSetSemifinalCharacters(1, player1Char, player2Char);
+            setCharacterSelectSemifinal(null);
+          }}
+        />
+      )}
+
+      {characterSelectSemifinal === 2 && bracket.semifinal2.gameType === 'smash' && (
+        <SmashCharacterSelectModal
+          isOpen={true}
+          onClose={() => setCharacterSelectSemifinal(null)}
+          match={{
+            id: 'sf2',
+            roundNumber: 18,
+            gameType: 'smash',
+            player1Id: bracket.semifinal2.player1Id!,
+            player2Id: bracket.semifinal2.player2Id!,
+            winnerId: null,
+            isDominant: false,
+            isSyncRound: false,
+            isPlayoff: true,
+            playoffRound: 'semifinal',
+            underservedPlayerId: null,
+            volunteerId: null,
+          }}
+          player1={semifinal2Player1}
+          player2={semifinal2Player2}
+          player1Standing={2}
+          player2Standing={3}
+          onConfirm={(_, player1Char, player2Char) => {
+            onSetSemifinalCharacters(2, player1Char, player2Char);
+            setCharacterSelectSemifinal(null);
+          }}
+        />
+      )}
+
+      {/* Finals Character Select Modal */}
+      {showFinalsCharacterSelect && bracket.finals.games.length > 0 && (
+        <SmashCharacterSelectModal
+          isOpen={true}
+          onClose={() => setShowFinalsCharacterSelect(false)}
+          match={bracket.finals.games[bracket.finals.games.length - 1]}
+          player1={finalsPlayer1}
+          player2={finalsPlayer2}
+          player1Standing={1}
+          player2Standing={2}
+          onConfirm={(_, player1Char, player2Char) => {
+            onSetFinalsGameCharacters(player1Char, player2Char);
+            setShowFinalsCharacterSelect(false);
           }}
         />
       )}
