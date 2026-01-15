@@ -804,6 +804,7 @@ function App() {
 
         return (
           <ForeshadowerAnnouncement
+            key={currentForeshadower.playerId}
             foreshadower={currentForeshadower}
             foreshadowerPlayer={foreshadowerPlayer}
             players={players}
