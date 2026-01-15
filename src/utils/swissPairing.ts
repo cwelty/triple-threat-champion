@@ -260,10 +260,10 @@ function findPairForGame(
     }
 
     // Quaternary: Avoid large skill mismatches - recordDiff >= 2 is a significant penalty
-    // BUT skip this check if both players need this game (bothNeedGame handled above)
+    // BUT skip this check if both players need this game (they must be paired regardless)
     // A 2-0 player should not face a 0-0 player in the same game (unless both need it)
-    const aLargeMismatch = a.recordDiff >= 2;
-    const bLargeMismatch = b.recordDiff >= 2;
+    const aLargeMismatch = !a.bothNeedGame && a.recordDiff >= 2;
+    const bLargeMismatch = !b.bothNeedGame && b.recordDiff >= 2;
     if (aLargeMismatch !== bLargeMismatch) {
       return aLargeMismatch ? 1 : -1; // Prefer the one WITHOUT large mismatch
     }
