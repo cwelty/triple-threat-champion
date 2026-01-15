@@ -537,16 +537,19 @@ export const useTournamentStore = create<TournamentStore>()(
             }
           }
 
+          // Recalculate Buchholz scores after match
+          const updatedPlayers = calculateAllBuchholz(players);
+
           // Add any new foreshadowers to pending list
           if (newForeshadowers.length > 0) {
             return {
               rounds,
-              players,
+              players: updatedPlayers,
               pendingForeshadowers: [...state.pendingForeshadowers, ...newForeshadowers],
             };
           }
 
-          return { rounds, players };
+          return { rounds, players: updatedPlayers };
         });
       },
 
@@ -703,10 +706,13 @@ export const useTournamentStore = create<TournamentStore>()(
             };
           }
 
+          // Recalculate Buchholz scores after each round
+          const players = calculateAllBuchholz(state.players);
+
           // Check if we should transition to sync rounds
           const nextPhase = state.currentRound >= state.totalRounds ? 'sync' : state.phase;
 
-          return { rounds, phase: nextPhase };
+          return { rounds, players, phase: nextPhase };
         });
       },
 
@@ -1049,16 +1055,19 @@ export const useTournamentStore = create<TournamentStore>()(
             }
           }
 
+          // Recalculate Buchholz scores after sync match
+          const updatedPlayers = calculateAllBuchholz(players);
+
           // Add any new foreshadowers to pending list
           if (newForeshadowers.length > 0) {
             return {
               rounds,
-              players,
+              players: updatedPlayers,
               pendingForeshadowers: [...state.pendingForeshadowers, ...newForeshadowers],
             };
           }
 
-          return { rounds, players };
+          return { rounds, players: updatedPlayers };
         });
       },
 
