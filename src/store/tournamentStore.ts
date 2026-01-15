@@ -739,7 +739,8 @@ export const useTournamentStore = create<TournamentStore>()(
           return encounters;
         };
 
-        // Group underserved players by their most-needed game type
+        // Group underserved players by ALL game types they need (not just their first one)
+        // This allows proper pairing when two players both need the same game
         const byGameType: Record<GameType, typeof underserved> = {
           smash: [],
           chess: [],
@@ -747,9 +748,10 @@ export const useTournamentStore = create<TournamentStore>()(
         };
 
         for (const shortage of underserved) {
-          const gameType = shortage.smashNeeded > 0 ? 'smash' :
-                          shortage.chessNeeded > 0 ? 'chess' : 'pingPong';
-          byGameType[gameType].push(shortage);
+          // Add player to ALL game types they need, not just the first one
+          if (shortage.smashNeeded > 0) byGameType.smash.push(shortage);
+          if (shortage.chessNeeded > 0) byGameType.chess.push(shortage);
+          if (shortage.pingPongNeeded > 0) byGameType.pingPong.push(shortage);
         }
 
         // First pass: pair underserved players with each other when possible

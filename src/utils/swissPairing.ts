@@ -112,6 +112,7 @@ interface ScoredPair {
   scarcity: number; // How few options the players have (higher = more urgent to match)
   isLastChance: boolean; // True if this is the last game type where these players can meet
   stationStickiness: number; // How many of the two players played this same game last round (0, 1, or 2)
+  bothNeedGame: boolean; // True if both players have played 2/3 matches (each needs exactly 1 more)
 }
 
 // Count how many valid opponents a player has left in this game
@@ -206,6 +207,10 @@ function findPairForGame(
         if (p1LastGame === gameType) stationStickiness++;
         if (p2LastGame === gameType) stationStickiness++;
 
+        // Check if both players need this game (played 2/3 matches, need exactly 1 more)
+        // If so, they should be paired together regardless of record difference
+        const bothNeedGame = sorted[i].matchesInGame === 2 && sorted[j].matchesInGame === 2;
+
         validPairs.push({
           p1: sorted[i],
           p2: sorted[j],
@@ -214,6 +219,7 @@ function findPairForGame(
           scarcity,
           isLastChance,
           stationStickiness,
+          bothNeedGame,
         });
       }
     }
@@ -225,29 +231,37 @@ function findPairForGame(
   }
 
   // Sort pairs with multiple priorities:
-  // 1. Last chance pairings (players who haven't met and this is their only remaining opportunity)
-  // 2. Critical scarcity (≤2 options left)
-  // 3. Avoid large skill mismatches (recordDiff >= 2 is heavily penalized)
-  // 4. Station stickiness (prefer players who weren't at this station last round)
-  // 5. First-time matchups with similar skill (crossGameEncounters === 0 AND recordDiff <= 1)
-  // 6. Fewer cross-game encounters
-  // 7. Higher scarcity (as tiebreaker)
-  // 8. Skill level difference (fine-tuning)
+  // 1. Both players need this game (each has 2/3 matches - they MUST play together)
+  // 2. Last chance pairings (players who haven't met and this is their only remaining opportunity)
+  // 3. Critical scarcity (≤2 options left)
+  // 4. Avoid large skill mismatches (recordDiff >= 2 is heavily penalized) - BUT NOT if both need game
+  // 5. Station stickiness (prefer players who weren't at this station last round)
+  // 6. First-time matchups with similar skill (crossGameEncounters === 0 AND recordDiff <= 1)
+  // 7. Fewer cross-game encounters
+  // 8. Higher scarcity (as tiebreaker)
+  // 9. Skill level difference (fine-tuning)
   validPairs.sort((a, b) => {
-    // Primary: Last chance pairings - MUST happen or players will never meet
+    // Primary: Both players need exactly 1 more match in this game - pair them together!
+    // This takes precedence over record difference since they MUST get their matches
+    if (a.bothNeedGame !== b.bothNeedGame) {
+      return a.bothNeedGame ? -1 : 1;
+    }
+
+    // Secondary: Last chance pairings - MUST happen or players will never meet
     if (a.isLastChance !== b.isLastChance) {
       return a.isLastChance ? -1 : 1;
     }
 
-    // Secondary: Critical scarcity (player has ≤2 options left)
+    // Tertiary: Critical scarcity (player has ≤2 options left)
     const aCritical = a.scarcity >= 8;
     const bCritical = b.scarcity >= 8;
     if (aCritical !== bCritical) {
       return aCritical ? -1 : 1;
     }
 
-    // Tertiary: Avoid large skill mismatches - recordDiff >= 2 is a significant penalty
-    // A 2-0 player should not face a 0-0 player in the same game
+    // Quaternary: Avoid large skill mismatches - recordDiff >= 2 is a significant penalty
+    // BUT skip this check if both players need this game (bothNeedGame handled above)
+    // A 2-0 player should not face a 0-0 player in the same game (unless both need it)
     const aLargeMismatch = a.recordDiff >= 2;
     const bLargeMismatch = b.recordDiff >= 2;
     if (aLargeMismatch !== bLargeMismatch) {
