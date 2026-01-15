@@ -150,17 +150,44 @@ export function MatchmakingLogModal({ isOpen, onClose, logs }: MatchmakingLogMod
           </div>
         )}
 
-        {/* Legend - hidden on mobile to save space */}
-        <div className="hidden md:block mt-6 pt-4 border-t border-gray-700">
-          <h4 className="text-sm font-bold text-gray-400 uppercase tracking-wide mb-2">
-            How Matchmaking Works
+        {/* Legend */}
+        <div className="mt-6 pt-4 border-t border-gray-700">
+          <h4 className="text-sm font-bold text-gray-400 uppercase tracking-wide mb-3">
+            Matchmaking Priority Order
           </h4>
-          <div className="text-xs text-gray-500 space-y-1">
-            <p><span className="text-purple-400">Same record group:</span> Players with identical win-loss records are paired first</p>
-            <p><span className="text-purple-400">Adjacent record groups:</span> When no same-record pair is available, players from neighboring groups are matched</p>
-            <p><span className="text-purple-400">Rematch allowed:</span> If all valid pairings have been exhausted, rematches may be permitted</p>
-            <p><span className="text-gray-400">Priority:</span> Under-served players (fewer matches) get matched first</p>
+          <div className="text-xs text-gray-500 space-y-2">
+            <div className="flex items-start gap-2">
+              <span className="text-[#ffd700] font-bold min-w-[20px]">1.</span>
+              <p><span className="text-[#ffd700]">Both need game:</span> If two players each have 2/3 matches in a game, they're paired regardless of record difference</p>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="text-[#e60012] font-bold min-w-[20px]">2.</span>
+              <p><span className="text-[#e60012]">Last chance:</span> Players who haven't met and this is their only remaining opportunity to face each other</p>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="text-orange-400 font-bold min-w-[20px]">3.</span>
+              <p><span className="text-orange-400">Critical scarcity:</span> Players with very few valid opponents remaining get priority</p>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="text-purple-400 font-bold min-w-[20px]">4.</span>
+              <p><span className="text-purple-400">Skill matching:</span> Avoid large record mismatches (e.g., 2-0 vs 0-0) unless both players urgently need the game</p>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="text-blue-400 font-bold min-w-[20px]">5.</span>
+              <p><span className="text-blue-400">Station rotation:</span> Players who played this game last round are less likely to stay there</p>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="text-green-400 font-bold min-w-[20px]">6.</span>
+              <p><span className="text-green-400">First-time matchups:</span> Prioritize players who haven't faced each other in any game (with similar skill)</p>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="text-gray-400 font-bold min-w-[20px]">7.</span>
+              <p><span className="text-gray-400">Cross-game variety:</span> Prefer pairing players who have faced each other in fewer games overall</p>
+            </div>
           </div>
+          <p className="text-xs text-gray-600 mt-3 italic">
+            No rematches are allowed within the same game type. Each player targets 3 matches per game (~9 total).
+          </p>
         </div>
       </div>
     </Modal>
