@@ -92,7 +92,7 @@ export function RulesModal({ isOpen, onClose }: RulesModalProps) {
                 <ul className="list-disc list-inside space-y-1 text-sm">
                   <li>Games are played to <span className="text-yellow-400">11 points</span></li>
                   <li>Must win by <span className="text-yellow-400">2 points</span></li>
-                  <li><span className="text-yellow-400">Dominant win:</span> Hold opponent to 5 or fewer points</li>
+                  <li><span className="text-yellow-400">Dominant win:</span> Hold opponent to 4 or fewer points</li>
                 </ul>
               </div>
 
@@ -414,7 +414,7 @@ export function RulesModal({ isOpen, onClose }: RulesModalProps) {
                 <ul className="list-disc list-inside space-y-1 text-sm">
                   <li><span className="text-red-400">Smash:</span> 3-stock victory</li>
                   <li><span className="text-purple-400">Chess:</span> Win by checkmate</li>
-                  <li><span className="text-green-400">Ping-Pong:</span> Hold opponent to 5 or fewer points</li>
+                  <li><span className="text-green-400">Ping-Pong:</span> Hold opponent to 4 or fewer points</li>
                 </ul>
               </div>
 
@@ -431,7 +431,7 @@ export function RulesModal({ isOpen, onClose }: RulesModalProps) {
                 <h4 className="font-semibold text-white mb-2">Bonus Points</h4>
                 <ul className="space-y-1 text-sm">
                   <li><span className="text-purple-400">Game Champion:</span> +5 points (each game)</li>
-                  <li><span className="text-yellow-400">Best Gambler:</span> +3 points</li>
+                  <li><span className="text-yellow-400">Best Gambler:</span> +5 points</li>
                   <li><span className="text-green-400">Correct Bet:</span> +1 point</li>
                   <li><span className="text-red-400">Wrong Bet:</span> -1 point</li>
                 </ul>

@@ -319,7 +319,7 @@ export function SyncRoundDisplay({
           />
 
           {/* Matchups Display */}
-          <div className="flex flex-wrap justify-center gap-4 max-w-4xl mx-auto">
+          <div className="flex flex-col md:flex-row justify-center gap-4">
             {sortedMatches.filter(m => m.winnerId === null).map((match) => {
               const player1 = getPlayer(match.player1Id);
               const player2 = getPlayer(match.player2Id);
@@ -333,7 +333,7 @@ export function SyncRoundDisplay({
               return (
                 <div
                   key={match.id}
-                  className="smash-card rounded-lg overflow-hidden"
+                  className="smash-card rounded-lg overflow-hidden w-full md:flex-1"
                 >
                   {/* Game Type Header */}
                   <div className={`bg-gradient-to-r ${colors.bg} px-4 py-2 border-b border-[#333]`}>
@@ -444,7 +444,7 @@ export function SyncRoundDisplay({
           )}
 
           {/* Match Cards for Result Entry */}
-          <div className="flex flex-wrap justify-center gap-4 max-w-4xl mx-auto">
+          <div className="flex flex-col md:flex-row justify-center gap-4">
             {sortedMatches.filter(m => m.winnerId === null).map((match) => {
               const player1 = getPlayer(match.player1Id);
               const player2 = getPlayer(match.player2Id);
@@ -458,7 +458,7 @@ export function SyncRoundDisplay({
               return (
                 <div
                   key={match.id}
-                  className="smash-card rounded-lg overflow-hidden"
+                  className="smash-card rounded-lg overflow-hidden w-full md:flex-1"
                 >
                   {/* Game Type Header */}
                   <div className={`bg-gradient-to-r ${colors.bg} px-4 py-2 border-b border-[#333]`}>

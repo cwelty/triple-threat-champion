@@ -39,7 +39,7 @@ export function MatchCard({
 
   return (
     <div className={`
-      group relative smash-card rounded-lg overflow-hidden
+      group relative smash-card rounded-lg overflow-hidden w-full md:flex-1
       ${isComplete ? 'border-green-500' : ''}
     `}>
       {/* Edit button - pencil in corner, only on hover when complete */}
@@ -132,7 +132,7 @@ export function MatchCard({
             {needsCharacterSelection && onSelectCharacters ? (
               <Button
                 onClick={() => onSelectCharacters(match)}
-                variant="primary"
+                variant="purple"
                 className="w-full"
               >
                 Select Characters

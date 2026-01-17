@@ -1593,7 +1593,7 @@ export const useTournamentStore = create<TournamentStore>()(
               players[idx] = {
                 ...players[idx],
                 isBestGambler: true,
-                totalPoints: players[idx].totalPoints + 3,
+                totalPoints: players[idx].totalPoints + 5,
               };
             }
             return { players, bestGamblerId: bestGambler.id };

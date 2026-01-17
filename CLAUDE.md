@@ -43,10 +43,10 @@ From `src/types/index.ts`:
 ### Points System
 
 - Regular win: +3 pts
-- Dominant win: +5 pts (3-stock in Smash, checkmate <1min in Chess, 11-0 in Ping Pong)
+- Dominant win: +5 pts (3-stock in Smash, checkmate in Chess, 4 or fewer points in Ping Pong)
 - Betting: +1/-1 per correct/incorrect prediction
 - Game champion bonus: +5 pts each
-- Best bettor bonus: +3 pts
+- Best bettor bonus: +5 pts
 
 ### Component Organization
 

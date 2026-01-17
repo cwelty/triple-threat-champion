@@ -127,9 +127,9 @@ export function PlayoffBracket({
               </div>
 
               <div className="p-6">
-                <div className="flex items-center justify-between gap-4 mb-6">
+                <div className="flex items-center justify-between gap-2 mb-6">
                   {/* Player 1 */}
-                  <div className={`flex-1 text-center p-4 rounded-xl transition-all duration-500 ${
+                  <div className={`flex-1 min-w-[140px] text-center p-4 rounded-xl transition-all duration-500 ${
                     bracket.semifinal1.winnerId === bracket.semifinal1.player1Id
                       ? 'bg-gradient-to-b from-green-800/60 to-green-900/60 ring-2 ring-green-400 shadow-[0_0_30px_rgba(34,197,94,0.4)] scale-105'
                       : bracket.semifinal1.winnerId
@@ -139,7 +139,7 @@ export function PlayoffBracket({
                     <div className="text-5xl mb-2">
                       {semifinal1Player1 ? getAvatarEmoji(semifinal1Player1.avatar) : '?'}
                     </div>
-                    <div className="font-bold text-white text-lg uppercase tracking-wide"
+                    <div className="font-bold text-white text-sm uppercase tracking-wide"
                          style={{ fontFamily: "'Russo One', sans-serif" }}>
                       {semifinal1Player1?.nickname ?? '?'}
                     </div>
@@ -150,12 +150,12 @@ export function PlayoffBracket({
                   </div>
 
                   {/* VS */}
-                  <div className="smash-vs text-3xl" style={{ animation: !bracket.semifinal1.winnerId ? 'smash-pulse 2s ease-in-out infinite' : 'none' }}>
+                  <div className="smash-vs text-3xl shrink-0" style={{ animation: !bracket.semifinal1.winnerId ? 'smash-pulse 2s ease-in-out infinite' : 'none' }}>
                     VS
                   </div>
 
                   {/* Player 2 */}
-                  <div className={`flex-1 text-center p-4 rounded-xl transition-all duration-500 ${
+                  <div className={`flex-1 min-w-[140px] text-center p-4 rounded-xl transition-all duration-500 ${
                     bracket.semifinal1.winnerId === bracket.semifinal1.player2Id
                       ? 'bg-gradient-to-b from-green-800/60 to-green-900/60 ring-2 ring-green-400 shadow-[0_0_30px_rgba(34,197,94,0.4)] scale-105'
                       : bracket.semifinal1.winnerId
@@ -165,7 +165,7 @@ export function PlayoffBracket({
                     <div className="text-5xl mb-2">
                       {semifinal1Player2 ? getAvatarEmoji(semifinal1Player2.avatar) : '?'}
                     </div>
-                    <div className="font-bold text-white text-lg uppercase tracking-wide"
+                    <div className="font-bold text-white text-sm uppercase tracking-wide"
                          style={{ fontFamily: "'Russo One', sans-serif" }}>
                       {semifinal1Player2?.nickname ?? '?'}
                     </div>
@@ -197,7 +197,7 @@ export function PlayoffBracket({
                       </div>
                     </div>
                     {bracket.semifinal1.gameType === 'smash' && !bracket.semifinal1.player1Character ? (
-                      <Button variant="secondary" size="lg" className="w-full" onClick={() => setCharacterSelectSemifinal(1)}>
+                      <Button variant="purple" size="lg" className="w-full" onClick={() => setCharacterSelectSemifinal(1)}>
                         Select Characters
                       </Button>
                     ) : (
@@ -230,9 +230,9 @@ export function PlayoffBracket({
               </div>
 
               <div className="p-6">
-                <div className="flex items-center justify-between gap-4 mb-6">
+                <div className="flex items-center justify-between gap-2 mb-6">
                   {/* Player 1 */}
-                  <div className={`flex-1 text-center p-4 rounded-xl transition-all duration-500 ${
+                  <div className={`flex-1 min-w-[140px] text-center p-4 rounded-xl transition-all duration-500 ${
                     bracket.semifinal2.winnerId === bracket.semifinal2.player1Id
                       ? 'bg-gradient-to-b from-green-800/60 to-green-900/60 ring-2 ring-green-400 shadow-[0_0_30px_rgba(34,197,94,0.4)] scale-105'
                       : bracket.semifinal2.winnerId
@@ -242,7 +242,7 @@ export function PlayoffBracket({
                     <div className="text-5xl mb-2">
                       {semifinal2Player1 ? getAvatarEmoji(semifinal2Player1.avatar) : '?'}
                     </div>
-                    <div className="font-bold text-white text-lg uppercase tracking-wide"
+                    <div className="font-bold text-white text-sm uppercase tracking-wide"
                          style={{ fontFamily: "'Russo One', sans-serif" }}>
                       {semifinal2Player1?.nickname ?? '?'}
                     </div>
@@ -253,12 +253,12 @@ export function PlayoffBracket({
                   </div>
 
                   {/* VS */}
-                  <div className="smash-vs text-3xl" style={{ animation: !bracket.semifinal2.winnerId ? 'smash-pulse 2s ease-in-out infinite' : 'none' }}>
+                  <div className="smash-vs text-3xl shrink-0" style={{ animation: !bracket.semifinal2.winnerId ? 'smash-pulse 2s ease-in-out infinite' : 'none' }}>
                     VS
                   </div>
 
                   {/* Player 2 */}
-                  <div className={`flex-1 text-center p-4 rounded-xl transition-all duration-500 ${
+                  <div className={`flex-1 min-w-[140px] text-center p-4 rounded-xl transition-all duration-500 ${
                     bracket.semifinal2.winnerId === bracket.semifinal2.player2Id
                       ? 'bg-gradient-to-b from-green-800/60 to-green-900/60 ring-2 ring-green-400 shadow-[0_0_30px_rgba(34,197,94,0.4)] scale-105'
                       : bracket.semifinal2.winnerId
@@ -268,7 +268,7 @@ export function PlayoffBracket({
                     <div className="text-5xl mb-2">
                       {semifinal2Player2 ? getAvatarEmoji(semifinal2Player2.avatar) : '?'}
                     </div>
-                    <div className="font-bold text-white text-lg uppercase tracking-wide"
+                    <div className="font-bold text-white text-sm uppercase tracking-wide"
                          style={{ fontFamily: "'Russo One', sans-serif" }}>
                       {semifinal2Player2?.nickname ?? '?'}
                     </div>
@@ -300,7 +300,7 @@ export function PlayoffBracket({
                       </div>
                     </div>
                     {bracket.semifinal2.gameType === 'smash' && !bracket.semifinal2.player1Character ? (
-                      <Button variant="secondary" size="lg" className="w-full" onClick={() => setCharacterSelectSemifinal(2)}>
+                      <Button variant="purple" size="lg" className="w-full" onClick={() => setCharacterSelectSemifinal(2)}>
                         Select Characters
                       </Button>
                     ) : (
@@ -533,7 +533,7 @@ export function PlayoffBracket({
                 </div>
                 <div>
                   {needsCharacterSelect ? (
-                    <Button variant="secondary" size="lg" onClick={() => setShowFinalsCharacterSelect(true)}>
+                    <Button variant="purple" size="lg" onClick={() => setShowFinalsCharacterSelect(true)}>
                       Select Characters
                     </Button>
                   ) : (

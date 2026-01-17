@@ -18,7 +18,7 @@ interface ResultEntryModalProps {
 const DOMINANT_DESCRIPTIONS = {
   smash: '3-stock victory',
   chess: 'Win by checkmate',
-  pingPong: 'Opponent scored 5 or fewer points',
+  pingPong: 'Opponent scored 4 or fewer points',
 };
 
 export function ResultEntryModal({

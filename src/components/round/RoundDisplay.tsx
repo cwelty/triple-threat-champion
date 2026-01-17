@@ -211,7 +211,7 @@ export function RoundDisplay({
 
       {/* Match Cards - Show after betting closes for result entry */}
       {!round.bettingOpen && (
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="flex flex-col md:flex-row justify-center gap-4">
           {[...round.matches].sort((a, b) => GAME_ORDER[a.gameType] - GAME_ORDER[b.gameType]).map((match) => (
             <MatchCard
               key={match.id}

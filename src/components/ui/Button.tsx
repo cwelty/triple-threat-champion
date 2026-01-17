@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'gold';
+  variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'gold' | 'purple';
   size?: 'sm' | 'md' | 'lg';
 }
 
@@ -66,6 +66,14 @@ export function Button({
       shadow-[0_4px_15px_rgba(255,215,0,0.4)]
       hover:shadow-[0_6px_25px_rgba(255,215,0,0.6)]
       focus:ring-yellow-500
+    `,
+    purple: `
+      bg-gradient-to-b from-[#8b5cf6] to-[#6d28d9]
+      border-[#a78bfa]
+      text-white
+      shadow-[0_4px_15px_rgba(139,92,246,0.4)]
+      hover:shadow-[0_6px_25px_rgba(139,92,246,0.6)]
+      focus:ring-purple-500
     `,
   };
 
