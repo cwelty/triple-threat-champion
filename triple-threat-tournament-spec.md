@@ -116,7 +116,7 @@ Suggested avatar set:
 | Smash Champion | +5 |
 | Chess Champion | +5 |
 | Ping Pong Champion | +5 |
-| Best Bettor | +3 (awarded after Finals) |
+| Best Bettor | +5 (awarded after Finals) |
 
 ---
 
@@ -231,7 +231,7 @@ The volunteer's record is completely unaffected. This ensures:
 Track each player's cumulative betting profit/loss:
 - Calculate: (correct bets) - (incorrect bets)
 - Track throughout entire tournament including playoffs
-- Award Best Bettor (+3 bonus) after Finals conclude
+- Award Best Bettor (+5 bonus) after Finals conclude
 
 ---
 
@@ -379,7 +379,7 @@ Tracked across:
 
 If multiple players tied for best net profit:
 1. Total number of bets placed (more = better, rewarding engagement)
-2. Co-Best Bettors (both get +3)
+2. Co-Best Bettors (both get +5)
 
 ### When Awarded
 
@@ -387,7 +387,7 @@ After Finals conclude, before final standings announced.
 
 ### Bonus
 
-+3 points added to winner's final total.
++5 points added to winner's final total.
 
 ---
 
@@ -910,7 +910,7 @@ findVolunteer(underservedPlayer, gameType):
 
 ### What if Best Bettor is also a champion?
 
-- They receive both bonuses (+5 for game champion, +3 for Best Bettor)
+- They receive both bonuses (+5 for game champion, +5 for Best Bettor)
 - No conflict
 
 ### What if someone wants to bet on all 3 matches?
@@ -1111,7 +1111,7 @@ findVolunteer(underservedPlayer, gameType):
 ### Best Bettor
 - [ ] Includes all bets (Swiss + Sync + Playoffs)
 - [ ] Correctly identifies highest profit
-- [ ] +3 bonus applied after finals
+- [ ] +5 bonus applied after finals
 
 ### Final Results
 - [ ] All awards displayed
@@ -1129,7 +1129,7 @@ findVolunteer(underservedPlayer, gameType):
 ║  POINTS                                                       ║
 ║  • Win = +3  • Dominant Win = +5  • Loss = +0                ║
 ║  • Bet correct = +1  • Bet wrong = -1                        ║
-║  • Game Champion bonus = +5  • Best Bettor bonus = +3        ║
+║  • Game Champion bonus = +5  • Best Bettor bonus = +5        ║
 ╠═══════════════════════════════════════════════════════════════╣
 ║  DOMINANT WINS                                                ║
 ║  • Smash: 3-stock  • Chess: <1 min checkmate  • PP: 11-0     ║

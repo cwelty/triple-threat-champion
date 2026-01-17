@@ -7,14 +7,14 @@ interface BestGamblerRevealProps {
   players: Player[];
   onReveal: () => void;
   onContinue: () => void;
-  bestGamblerId: string | null;
+  bestGamblerIds: string[];
 }
 
 export function BestGamblerReveal({
   players,
   onReveal,
   onContinue,
-  bestGamblerId,
+  bestGamblerIds,
 }: BestGamblerRevealProps) {
   const [stage, setStage] = useState<'intro' | 'drumroll' | 'reveal' | 'complete'>('intro');
   const [countdown, setCountdown] = useState(3);
@@ -29,7 +29,7 @@ export function BestGamblerReveal({
     })
     .slice(0, 5);
 
-  const bestGambler = bestGamblerId ? players.find((p) => p.id === bestGamblerId) : null;
+  const bestGamblers = players.filter((p) => bestGamblerIds.includes(p.id));
   const topGambler = gamblingLeaderboard[0];
   const hasBestGambler = topGambler && topGambler.bettingProfit > 0;
 
@@ -56,7 +56,7 @@ export function BestGamblerReveal({
             Best Gambler Award
           </h2>
           <p className="text-xl text-gray-400 mb-2">Who made the smartest predictions?</p>
-          <p className="text-lg text-[#ffd700]">+3 bonus points to the winner!</p>
+          <p className="text-lg text-[#ffd700]">+5 bonus points to the winner!</p>
         </div>
 
         <div className="smash-card rounded-xl p-8 text-center border-[#ffd700]"
@@ -93,7 +93,7 @@ export function BestGamblerReveal({
           </div>
           <h2 className="text-4xl font-bold text-[#ffd700] uppercase tracking-wider mb-4"
               style={{ fontFamily: "'Russo One', sans-serif" }}>
-            The Best Gambler is...
+            {bestGamblers.length > 1 ? 'The Best Gamblers are...' : 'The Best Gambler is...'}
           </h2>
           <div className="text-9xl font-bold text-white"
                style={{ fontFamily: "'Russo One', sans-serif", textShadow: '0 0 50px rgba(255,215,0,0.5)' }}>
@@ -108,44 +108,54 @@ export function BestGamblerReveal({
   if (stage === 'reveal') {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-8">
-        {bestGambler ? (
+        {bestGamblers.length > 0 ? (
           <>
             <div className="text-center animate-bounce-in">
               <div className="text-8xl mb-4">💰</div>
               <h2 className="text-3xl font-bold text-[#ffd700] uppercase tracking-wider mb-2"
                   style={{ fontFamily: "'Russo One', sans-serif" }}>
-                Best Gambler
+                {bestGamblers.length > 1 ? 'Best Gamblers' : 'Best Gambler'}
               </h2>
+              {bestGamblers.length > 1 && (
+                <p className="text-gray-400">It's a tie!</p>
+              )}
             </div>
 
-            <div className="smash-card rounded-2xl p-8 text-center border-[#ffd700] animate-zoom-in"
-                 style={{ boxShadow: '0 0 50px rgba(255,215,0,0.4)', animation: 'smash-pulse 2s ease-in-out infinite' }}>
-              <div className="text-9xl mb-4">{getAvatarEmoji(bestGambler.avatar)}</div>
-              <div className="text-4xl font-bold text-white mb-2 tracking-wider"
-                   style={{ fontFamily: "'Russo One', sans-serif" }}>
-                {bestGambler.nickname}
-              </div>
-              <div className="text-gray-400 mb-4">{bestGambler.name}</div>
+            <div className={`flex flex-wrap justify-center gap-6 ${bestGamblers.length > 1 ? 'max-w-4xl' : ''}`}>
+              {bestGamblers.map((gambler) => (
+                <div key={gambler.id}
+                     className="smash-card rounded-2xl p-8 text-center border-[#ffd700] animate-zoom-in"
+                     style={{ boxShadow: '0 0 50px rgba(255,215,0,0.4)', animation: 'smash-pulse 2s ease-in-out infinite' }}>
+                  <div className={bestGamblers.length > 1 ? 'text-7xl mb-4' : 'text-9xl mb-4'}>
+                    {getAvatarEmoji(gambler.avatar)}
+                  </div>
+                  <div className={`font-bold text-white mb-2 tracking-wider ${bestGamblers.length > 1 ? 'text-2xl' : 'text-4xl'}`}
+                       style={{ fontFamily: "'Russo One', sans-serif" }}>
+                    {gambler.nickname}
+                  </div>
+                  <div className="text-gray-400 mb-4">{gambler.name}</div>
 
-              <div className="grid grid-cols-3 gap-4 mb-6">
-                <div className="bg-gray-800 rounded-lg p-3">
-                  <div className="text-2xl font-bold text-green-400">+{bestGambler.bettingProfit}</div>
-                  <div className="text-xs text-gray-500 uppercase">Profit</div>
-                </div>
-                <div className="bg-gray-800 rounded-lg p-3">
-                  <div className="text-2xl font-bold text-white">{bestGambler.betsWon}</div>
-                  <div className="text-xs text-gray-500 uppercase">Wins</div>
-                </div>
-                <div className="bg-gray-800 rounded-lg p-3">
-                  <div className="text-2xl font-bold text-white">{bestGambler.betsPlaced}</div>
-                  <div className="text-xs text-gray-500 uppercase">Bets</div>
-                </div>
-              </div>
+                  <div className="grid grid-cols-3 gap-4 mb-6">
+                    <div className="bg-gray-800 rounded-lg p-3">
+                      <div className="text-2xl font-bold text-green-400">+{gambler.bettingProfit}</div>
+                      <div className="text-xs text-gray-500 uppercase">Profit</div>
+                    </div>
+                    <div className="bg-gray-800 rounded-lg p-3">
+                      <div className="text-2xl font-bold text-white">{gambler.betsWon}</div>
+                      <div className="text-xs text-gray-500 uppercase">Wins</div>
+                    </div>
+                    <div className="bg-gray-800 rounded-lg p-3">
+                      <div className="text-2xl font-bold text-white">{gambler.betsPlaced}</div>
+                      <div className="text-xs text-gray-500 uppercase">Bets</div>
+                    </div>
+                  </div>
 
-              <div className="inline-block px-6 py-2 bg-[#ffd700] text-black font-bold rounded-full text-xl"
-                   style={{ fontFamily: "'Russo One', sans-serif" }}>
-                +3 POINTS
-              </div>
+                  <div className="inline-block px-6 py-2 bg-[#ffd700] text-black font-bold rounded-full text-xl"
+                       style={{ fontFamily: "'Russo One', sans-serif" }}>
+                    +5 POINTS
+                  </div>
+                </div>
+              ))}
             </div>
           </>
         ) : (

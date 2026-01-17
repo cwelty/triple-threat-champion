@@ -77,7 +77,7 @@ function App() {
     smashChampionId,
     chessChampionId,
     pingPongChampionId,
-    bestGamblerId,
+    bestGamblerIds,
     tripleThreatchampionId,
     draftOrder,
     currentDraftPick,
@@ -184,7 +184,7 @@ function App() {
   const smashChampion = smashChampionId ? getPlayer(smashChampionId) : undefined;
   const chessChampion = chessChampionId ? getPlayer(chessChampionId) : undefined;
   const pingPongChampion = pingPongChampionId ? getPlayer(pingPongChampionId) : undefined;
-  const bestGambler = bestGamblerId ? getPlayer(bestGamblerId) : undefined;
+  const bestGamblers = bestGamblerIds.map((id) => getPlayer(id)).filter((p): p is NonNullable<typeof p> => p !== undefined);
   const tripleThreatchampion = tripleThreatchampionId ? getPlayer(tripleThreatchampionId) : undefined;
 
   // Games are active when betting is closed but round is not complete
@@ -709,7 +709,7 @@ function App() {
             {showBestGamblerReveal && !bestGamblerRevealed ? (
               <BestGamblerReveal
                 players={players}
-                bestGamblerId={bestGamblerId}
+                bestGamblerIds={bestGamblerIds}
                 onReveal={() => {
                   awardBestGambler();
                 }}
@@ -725,7 +725,7 @@ function App() {
                 smashChampion={smashChampion}
                 chessChampion={chessChampion}
                 pingPongChampion={pingPongChampion}
-                bestGambler={bestGambler}
+                bestGamblers={bestGamblers}
                 getSortedStandings={getSortedStandings}
                 getGameStandings={getGameStandings}
                 onReset={resetTournament}

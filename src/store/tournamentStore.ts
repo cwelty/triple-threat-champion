@@ -157,7 +157,7 @@ export const useTournamentStore = create<TournamentStore>()(
       smashChampionId: null,
       chessChampionId: null,
       pingPongChampionId: null,
-      bestGamblerId: null,
+      bestGamblerIds: [],
       tripleThreatchampionId: null,
       // Draft state
       draftOrder: [],
@@ -1580,26 +1580,28 @@ export const useTournamentStore = create<TournamentStore>()(
         set((state) => {
           const players = [...state.players];
 
-          // Find best gambler
-          const sorted = [...players].sort((a, b) => {
-            if (b.bettingProfit !== a.bettingProfit) return b.bettingProfit - a.bettingProfit;
-            return b.betsPlaced - a.betsPlaced;
-          });
+          // Find highest betting profit
+          const maxProfit = Math.max(...players.map((p) => p.bettingProfit));
 
-          const bestGambler = sorted[0];
-          if (bestGambler && bestGambler.bettingProfit > 0) {
-            const idx = players.findIndex((p) => p.id === bestGambler.id);
-            if (idx >= 0) {
-              players[idx] = {
-                ...players[idx],
-                isBestGambler: true,
-                totalPoints: players[idx].totalPoints + 5,
-              };
-            }
-            return { players, bestGamblerId: bestGambler.id };
+          // No award if no one has positive profit
+          if (maxProfit <= 0) {
+            return { players };
           }
 
-          return { players };
+          // Find all players tied for best gambler
+          const bestGamblerIds: string[] = [];
+          players.forEach((player, idx) => {
+            if (player.bettingProfit === maxProfit) {
+              bestGamblerIds.push(player.id);
+              players[idx] = {
+                ...player,
+                isBestGambler: true,
+                totalPoints: player.totalPoints + 5,
+              };
+            }
+          });
+
+          return { players, bestGamblerIds };
         });
       },
 
@@ -1723,7 +1725,7 @@ export const useTournamentStore = create<TournamentStore>()(
           smashChampionId: null,
           chessChampionId: null,
           pingPongChampionId: null,
-          bestGamblerId: null,
+          bestGamblerIds: [],
           tripleThreatchampionId: null,
         });
       },

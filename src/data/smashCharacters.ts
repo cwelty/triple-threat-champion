@@ -20,6 +20,7 @@ export const SMASH_CHARACTERS: SmashCharacter[] = [
   { id: 'diddyKong', name: 'Diddy Kong', series: 'Super Mario' },
   { id: 'kingKRool', name: 'King K. Rool', series: 'Super Mario' },
   { id: 'yoshi', name: 'Yoshi', series: 'Super Mario' },
+  { id: 'wario', name: 'Wario', series: 'Super Mario' },
 
   // The Legend of Zelda Series
   { id: 'link', name: 'Link', series: 'Zelda' },
@@ -103,7 +104,6 @@ export const SMASH_CHARACTERS: SmashCharacter[] = [
   { id: 'captainFalcon', name: 'Captain Falcon', series: 'Other' },
   { id: 'iceClimbers', name: 'Ice Climbers', series: 'Other' },
   { id: 'mrGameAndWatch', name: 'Mr. Game & Watch', series: 'Other' },
-  { id: 'wario', name: 'Wario', series: 'Other' },
   { id: 'snake', name: 'Snake', series: 'Other' },
   { id: 'sonic', name: 'Sonic', series: 'Other' },
   { id: 'olimar', name: 'Olimar', series: 'Other' },

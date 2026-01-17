@@ -142,7 +142,7 @@ export interface TournamentState {
   smashChampionId: string | null;
   chessChampionId: string | null;
   pingPongChampionId: string | null;
-  bestGamblerId: string | null;
+  bestGamblerIds: string[];
   tripleThreatchampionId: string | null;
   // Draft state
   draftOrder: string[];

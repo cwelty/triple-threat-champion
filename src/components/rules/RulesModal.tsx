@@ -389,7 +389,7 @@ export function RulesModal({ isOpen, onClose }: RulesModalProps) {
                 <h4 className="font-semibold text-white mb-2">Best Gambler Award</h4>
                 <p className="text-sm">
                   At tournament end, the player with the highest gambling profit receives
-                  a <span className="text-yellow-400">+3 point bonus</span> (must have positive profit).
+                  a <span className="text-yellow-400">+5 point bonus</span> (must have positive profit).
                 </p>
               </div>
             </div>
